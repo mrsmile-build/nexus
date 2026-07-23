@@ -1,0 +1,80 @@
+# NEXUS Memory Engine
+
+## Purpose
+
+The Memory Engine stores and retrieves information required for intelligent reasoning while preserving accuracy, privacy, and historical context.
+
+Memory is separate from knowledge.
+
+Knowledge represents facts about the world.
+
+Memory represents experiences, users, tasks, and previous reasoning.
+
+---
+
+## Memory Types
+
+### Working Memory
+- Current task
+- Intermediate reasoning
+- Temporary variables
+
+### Episodic Memory
+- Previous conversations
+- Research sessions
+- Experiments
+- Decisions
+
+### Semantic Memory
+- Learned concepts
+- Definitions
+- Relationships
+
+### Procedural Memory
+- Algorithms
+- Workflows
+- Tool usage
+- Problem-solving methods
+
+---
+
+## Responsibilities
+
+- Store memory
+- Retrieve relevant memory
+- Rank importance
+- Forget obsolete memory
+- Detect contradictions
+- Version updates
+
+---
+
+## Retrieval Process
+
+Input
+↓
+
+Search Memory
+
+↓
+
+Rank by relevance
+
+↓
+
+Verify validity
+
+↓
+
+Return to Reasoning Engine
+
+---
+
+## Future Features
+
+- Temporal memory
+- Memory compression
+- Long-term memory
+- User memory
+- Scientific memory
+- Distributed memory
