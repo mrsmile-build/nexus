@@ -1,7 +1,7 @@
 from graph import KnowledgeGraph
 from query import QueryEngine
 
-kg = KnowledgeGraph()
+kg = KnowledgeGraph(db_path=":memory:")
 
 kg.add_node("Artificial Intelligence")
 kg.add_node("Mathematics")

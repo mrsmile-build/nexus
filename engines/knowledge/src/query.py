@@ -1,6 +1,3 @@
-from graph import KnowledgeGraph
-
-
 class QueryEngine:
     def __init__(self, graph):
         self.graph = graph

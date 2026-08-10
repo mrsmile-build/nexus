@@ -1,0 +1,14 @@
+# Runtime data -- SQLite-backed Memory/Knowledge state, not source
+data/
+*.db
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor backups (e.g. vim/nano crash-recovery files)
+*.save
+*.swp
+
+# Secrets -- nexus.sh already scans for this; keep the promise
+.env

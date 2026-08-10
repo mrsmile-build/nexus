@@ -43,4 +43,3 @@ Output
 - Symbolic Reasoning
 - Probabilistic Reasoning
 - Causal Reasoning
-

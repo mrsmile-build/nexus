@@ -1,6 +1,6 @@
 from graph import KnowledgeGraph
 
-kg = KnowledgeGraph()
+kg = KnowledgeGraph(db_path=":memory:")
 
 kg.add_node("Artificial Intelligence")
 kg.add_node("Machine Learning")

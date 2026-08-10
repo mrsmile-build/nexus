@@ -1,52 +1,52 @@
 """
-NEXUS Core v0.1
+NEXUS Core v0.2
 
-Coordinates all NEXUS engines.
+Thin entry point. The actual coordination logic that used to live
+here now lives in the Thinking Engine (engines/thinking/src/thinking.py),
+so the code matches what engines/thinking/README.md already documents.
+The NEXUS class/run() method are kept so nothing that already calls
+them breaks.
 """
 
-from engines.memory.src.memory import MemoryEngine
-from engines.knowledge.src.graph import KnowledgeGraph
-from engines.planning.src.planner import Planner
-from engines.reasoning.src.reasoner import Reasoner
+from engines.thinking.src.thinking import ThinkingEngine
 
 
 class NEXUS:
     def __init__(self):
-        self.memory = MemoryEngine()
-        self.knowledge = KnowledgeGraph()
-        self.planner = Planner()
-        self.reasoner = Reasoner()
+        self.engine = ThinkingEngine()
 
     def run(self, goal):
         print("=" * 50)
         print("NEXUS AI")
         print("=" * 50)
-
         print(f"\nGoal: {goal}")
 
-        # Store goal
-        self.memory.store("goal", goal)
+        outcome = self.engine.think(goal)
 
-        # Create plan
-        plan = self.planner.create_plan(goal)
-
-        # Reason
-        result = self.reasoner.reason(
-            goal=goal,
-            knowledge=["Memory", "Knowledge Graph", "Planning"]
-        )
-
-        print("\nPlan:")
-        for i, step in enumerate(plan["steps"], start=1):
+        print(f"\nPlan (via {outcome['plan']['method']}):")
+        for i, step in enumerate(outcome["plan"]["steps"], start=1):
             print(f"{i}. {step}")
 
-        print("\nReasoning:")
-        print(result["conclusion"])
+        print(f"\nReasoning (via {outcome['reasoning']['method']}):")
+        print(outcome["reasoning"]["conclusion"])
+
+        v = outcome["verification"]
+        print(f"\nVerification (via {v['method']}):")
+        print(f"  Verified: {v['verified']}")
+        if v.get("confidence") is not None:
+            print(f"  Confidence: {v['confidence']}")
+        if v.get("issues"):
+            print(f"  Issues: {', '.join(v['issues'])}")
+
+        print(f"\nDiscovery ideas (via {outcome['discovery_method']}):")
+        for idea in outcome["ideas"]:
+            print(f"- {idea}")
 
         print("\nMemory:")
-        print(self.memory.all())
+        print(self.engine.memory.all())
 
-        return result
+        self.engine.close()
+        return outcome
 
 
 if __name__ == "__main__":

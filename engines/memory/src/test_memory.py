@@ -1,6 +1,6 @@
 from memory import MemoryEngine
 
-mem = MemoryEngine()
+mem = MemoryEngine(db_path=":memory:")
 
 mem.store("planet", "Earth")
 mem.store("star", "Sun")
