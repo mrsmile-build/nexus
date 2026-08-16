@@ -173,6 +173,7 @@ button:active { opacity: 0.85; }
 .nav a { color: var(--teal); text-decoration: none; font-family: var(--mono); font-size: 13px; }
 .nav a:hover { text-decoration: underline; }
 .search-form { display: flex; gap: 8px; margin-bottom: 20px; }
+.search-box { width: 100%; box-sizing: border-box; margin-bottom: 24px; }
 .entry { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
 .entry:last-child { border-bottom: none; }
 .entry-goal { font-size: 17px; font-weight: 600; margin: 0 0 4px; }
@@ -320,7 +321,7 @@ def render_result(outcome):
     """
 
 
-def render_history_entry(entry):
+def render_history_entry(entry, include_delete=True):
     goal = entry["key"][len("result::"):]
     value = entry["value"]
     verification = value.get("verification") or {}
@@ -343,6 +344,16 @@ def render_history_entry(entry):
     ideas = value.get("ideas") or []
     ideas_html = "".join(f"<li>{html.escape(i)}</li>" for i in ideas)
 
+    delete_html = ""
+    if include_delete:
+        delete_html = (
+            '<form method="POST" action="/delete" '
+            "onsubmit=\"return confirm('Delete this entry? This can\\'t be undone.')\">"
+            f'<input type="hidden" name="goal" value="{html.escape(goal)}">'
+            '<button type="submit" class="delete-btn">Delete this entry</button>'
+            "</form>"
+        )
+
     return f"""
     <div class="entry">
       <p class="entry-goal">{html.escape(goal)} {tag_html}</p>
@@ -351,10 +362,7 @@ def render_history_entry(entry):
       {f'<ul class="meta">{issues_html}</ul>' if issues_html else ''}
       {check_box_html}
       {f'<div class="card" style="margin-top:8px"><ul>{ideas_html}</ul></div>' if ideas_html else ''}
-      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\\'t be undone.')">
-        <input type="hidden" name="goal" value="{html.escape(goal)}">
-        <button type="submit" class="delete-btn">Delete this entry</button>
-      </form>
+      {delete_html}
     </div>
     """
 

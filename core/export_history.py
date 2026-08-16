@@ -32,6 +32,8 @@ from engines.memory.src.memory import MemoryEngine
 OUTPUT_PATH = "docs/index.html"
 MAX_ENTRIES = 1000  # generous ceiling; revisit if history genuinely exceeds this
 
+REPO_URL = "https://github.com/mrsmile-build/nexus"
+
 PAGE_TEMPLATE = """<!doctype html>
 <html>
 <head>
@@ -43,12 +45,31 @@ PAGE_TEMPLATE = """<!doctype html>
 <body>
 <div class="wrap">
   <p class="brand">Nexus &middot; static snapshot &middot; read-only</p>
+  <p class="nav"><a href="{repo_url}">View the source on GitHub &rarr;</a></p>
   <h1>NEXUS History</h1>
   <p class="hint">A snapshot of past questions and answers, frozen at export
-  time. This page can't think about new ones -- that needs a real API key
-  and a running Python backend, neither of which static hosting can hold.</p>
+  time. This page can't think about new ones &mdash; that needs a real API
+  key and a running Python backend, neither of which static hosting can
+  hold. Search below works entirely in your browser; everything on this
+  page is already here, nothing is fetched.</p>
+  <input type="text" id="search-box" class="search-box" placeholder="Search past questions and answers" oninput="nexusFilter()">
+  <p id="no-results" class="empty" style="display:none">No entries match that search.</p>
   {entries_html}
 </div>
+<script>
+function nexusFilter() {{
+  var term = document.getElementById('search-box').value.toLowerCase();
+  var entries = document.querySelectorAll('.entry');
+  var visible = 0;
+  entries.forEach(function(entry) {{
+    var matches = entry.textContent.toLowerCase().indexOf(term) !== -1;
+    entry.style.display = matches ? '' : 'none';
+    if (matches) visible++;
+  }});
+  document.getElementById('no-results').style.display =
+    (visible === 0 && term !== '') ? '' : 'none';
+}}
+</script>
 </body>
 </html>"""
 
@@ -59,7 +80,7 @@ def export(db_path="data/memory.db", output_path=OUTPUT_PATH):
     memory.close()
 
     entries_html = (
-        "".join(render_history_entry(e) for e in entries)
+        "".join(render_history_entry(e, include_delete=False) for e in entries)
         if entries
         else '<p class="empty">Nothing recorded yet.</p>'
     )
@@ -69,7 +90,7 @@ def export(db_path="data/memory.db", output_path=OUTPUT_PATH):
         os.makedirs(directory, exist_ok=True)
 
     with open(output_path, "w", encoding="utf-8") as f:
-        f.write(PAGE_TEMPLATE.format(style=STYLE, entries_html=entries_html))
+        f.write(PAGE_TEMPLATE.format(style=STYLE, repo_url=REPO_URL, entries_html=entries_html))
 
     return len(entries)
 

@@ -151,6 +151,7 @@ button:active { opacity: 0.85; }
 .nav a { color: var(--teal); text-decoration: none; font-family: var(--mono); font-size: 13px; }
 .nav a:hover { text-decoration: underline; }
 .search-form { display: flex; gap: 8px; margin-bottom: 20px; }
+.search-box { width: 100%; box-sizing: border-box; margin-bottom: 24px; }
 .entry { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
 .entry:last-child { border-bottom: none; }
 .entry-goal { font-size: 17px; font-weight: 600; margin: 0 0 4px; }
@@ -183,10 +184,15 @@ button:active { opacity: 0.85; }
 <body>
 <div class="wrap">
   <p class="brand">Nexus &middot; static snapshot &middot; read-only</p>
+  <p class="nav"><a href="https://github.com/mrsmile-build/nexus">View the source on GitHub &rarr;</a></p>
   <h1>NEXUS History</h1>
   <p class="hint">A snapshot of past questions and answers, frozen at export
-  time. This page can't think about new ones -- that needs a real API key
-  and a running Python backend, neither of which static hosting can hold.</p>
+  time. This page can't think about new ones &mdash; that needs a real API
+  key and a running Python backend, neither of which static hosting can
+  hold. Search below works entirely in your browser; everything on this
+  page is already here, nothing is fetched.</p>
+  <input type="text" id="search-box" class="search-box" placeholder="Search past questions and answers" oninput="nexusFilter()">
+  <p id="no-results" class="empty" style="display:none">No entries match that search.</p>
   
     <div class="entry">
       <p class="entry-goal">Design a cheaper cement and give ingredients <span class="tag llm">llm</span></p>
@@ -205,12 +211,23 @@ Blended cement → can achieve → comparable compressive strength</p></div>
       
       <div class="check-box"><p class="check-box-label">Verify externally before relying on this</p><ul><li>Dangote&#x27;s low‑cost cement SCM share</li><li>current OPC cost versus target ≤ 70 % cost</li><li>specific clinker‑SCM ratios cited in ASTM C595 and EN 197‑1 for target 28‑day strength.</li></ul></div>
       <div class="card" style="margin-top:8px"><ul><li>Examine the feasibility of converting abundant agricultural residues (e.g., sugarcane bagasse ash, coconut husk ash) into high‑reactivity pozzolans through low‑temperature calcination, creating a locally sourced SCM with minimal energy input.</li><li>Model a hybrid cement‑geopolymer system where a small proportion of traditional clinker is replaced by alkali‑activated slag or fly ash, leveraging waste alkaline liquids from nearby industries to reduce both material and chemical costs.</li><li>Conduct a life‑cycle cost analysis that includes potential revenue from carbon‑credit schemes or green‑bond financing for low‑emission cement formulations, turning environmental benefits into direct financial incentives.</li><li>Develop a risk‑matrix that maps regional availability, regulatory restrictions, and long‑term stability of each low‑cost SCM, ensuring supply‑chain resilience against geopolitical or environmental disruptions.</li></ul></div>
-      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
-        <input type="hidden" name="goal" value="Design a cheaper cement and give ingredients">
-        <button type="submit" class="delete-btn">Delete this entry</button>
-      </form>
+      
     </div>
     
 </div>
+<script>
+function nexusFilter() {
+  var term = document.getElementById('search-box').value.toLowerCase();
+  var entries = document.querySelectorAll('.entry');
+  var visible = 0;
+  entries.forEach(function(entry) {
+    var matches = entry.textContent.toLowerCase().indexOf(term) !== -1;
+    entry.style.display = matches ? '' : 'none';
+    if (matches) visible++;
+  });
+  document.getElementById('no-results').style.display =
+    (visible === 0 && term !== '') ? '' : 'none';
+}
+</script>
 </body>
 </html>
