@@ -189,6 +189,17 @@ button:active { opacity: 0.85; }
 }
 .feedback-form button:active { border-color: var(--teal); }
 .feedback-note { color: var(--teal); font-family: var(--mono); font-size: 13px; margin-top: 16px; }
+.delete-btn {
+  background: none;
+  border: none;
+  color: var(--rust);
+  font-family: var(--mono);
+  font-size: 12px;
+  margin-top: 12px;
+  padding: 4px 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
 """
 
 PAGE_TEMPLATE = """<!doctype html>
@@ -340,6 +351,10 @@ def render_history_entry(entry):
       {f'<ul class="meta">{issues_html}</ul>' if issues_html else ''}
       {check_box_html}
       {f'<div class="card" style="margin-top:8px"><ul>{ideas_html}</ul></div>' if ideas_html else ''}
+      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\\'t be undone.')">
+        <input type="hidden" name="goal" value="{html.escape(goal)}">
+        <button type="submit" class="delete-btn">Delete this entry</button>
+      </form>
     </div>
     """
 
@@ -419,6 +434,15 @@ class Handler(BaseHTTPRequestHandler):
                 "It'll be used next time a related question comes up.</p>",
             )
             self._send_html(body)
+            return
+
+        if self.path == "/delete":
+            goal = fields.get("goal", "")
+            if goal:
+                self.engine.memory.forget(f"result::{goal}")
+            self.send_response(303)
+            self.send_header("Location", "/history")
+            self.end_headers()
             return
 
         self.send_response(404)

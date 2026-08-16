@@ -167,6 +167,17 @@ button:active { opacity: 0.85; }
 }
 .feedback-form button:active { border-color: var(--teal); }
 .feedback-note { color: var(--teal); font-family: var(--mono); font-size: 13px; margin-top: 16px; }
+.delete-btn {
+  background: none;
+  border: none;
+  color: var(--rust);
+  font-family: var(--mono);
+  font-size: 12px;
+  margin-top: 12px;
+  padding: 4px 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
 </style>
 </head>
 <body>
@@ -187,6 +198,10 @@ button:active { opacity: 0.85; }
       <ul class="meta"><li class="issue">plan-mismatch</li></ul>
       <div class="check-box"><p class="check-box-label">Verify externally before relying on this</p><ul><li>current market price</li><li>projected cost savings figure</li></ul></div>
       <div class="card" style="margin-top:8px"><ul><li>Investigate the use of locally sourced industrial bio‑char as a partial pozzolan to replace a portion of fly ash, assessing its effect on both cost and carbon sequestration potential.</li><li>Examine supply‑chain resilience by mapping the geographic co‑location of raw material sources (e.g., slag, calcined clay) with major construction hubs, identifying “material corridors” that could reduce transportation emissions and logistics costs.</li><li>Conduct a lifecycle‑cost sensitivity analysis that incorporates future regulatory carbon taxes and potential subsidies for low‑carbon binders, revealing whether a slightly higher upfront material cost could become economically advantageous over the product’s service life.</li></ul></div>
+      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
+        <input type="hidden" name="goal" value="Design a cheaper cement and give ingredients ">
+        <button type="submit" class="delete-btn">Delete this entry</button>
+      </form>
     </div>
     
     <div class="entry">
@@ -201,6 +216,10 @@ button:active { opacity: 0.85; }
       <ul class="meta"><li class="issue">unproven universal formula claim</li></ul>
       
       <div class="card" style="margin-top:8px"><ul><li>Investigate whether a unified “difference‑quotient shortcut” can be derived for any polynomial by expressing the derivative as a weighted sum of its finite differences at strategically chosen points, potentially bypassing limit notation entirely.</li><li>Explore extending the simplified formula to piecewise‑defined functions by incorporating continuity and differentiability checks at the breakpoints, thus creating a hybrid rule that automatically flags non‑differentiable regions.</li><li>Examine the impact of rounding errors when the new formula is implemented in low‑precision arithmetic (e.g., on microcontrollers), and devise error‑bounding techniques that guarantee results stay within a prescribed tolerance.</li><li>Assess whether the proposed expression can be generalized to handle implicit differentiation scenarios, such as solving for dy/dx in equations where y appears on both sides, by reformulating the rule in terms of total differentials.</li></ul></div>
+      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
+        <input type="hidden" name="goal" value="Lets create a new simple formula to solve calculus">
+        <button type="submit" class="delete-btn">Delete this entry</button>
+      </form>
     </div>
     
     <div class="entry">
@@ -215,6 +234,10 @@ button:active { opacity: 0.85; }
       
       <div class="check-box"><p class="check-box-label">Verify externally before relying on this</p><ul><li>high‑clinker Portland formula existence</li><li>NEXUS storage of Dangote cement data</li></ul></div>
       <div class="card" style="margin-top:8px"><ul><li>Explore a unified “operator shortcut” that combines differentiation and integration symbols into a single reversible mapping, revealing hidden symmetries between the two processes.</li><li>Investigate whether expressing functions in a mixed basis of orthogonal polynomials and exponential kernels can yield a universal product‑rule formula that works for any combination of elementary functions.</li><li>Assess the risk that a newly proposed compact formula might inadvertently mask domain‑specific singularities, leading users to apply it where limits or discontinuities invalidate the result.</li></ul></div>
+      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
+        <input type="hidden" name="goal" value="Lets create a new simple formula to solve calculus ">
+        <button type="submit" class="delete-btn">Delete this entry</button>
+      </form>
     </div>
     
     <div class="entry">
@@ -225,6 +248,10 @@ We know Dangote’s Portland cement is a high‑clinker product priced ~13 000
       
       <div class="check-box"><p class="check-box-label">Verify externally before relying on this</p><ul><li>current market price of Dangote cement</li><li>local prices for clinker</li><li>fly ash</li><li>slag</li><li>limestone</li><li>gypsum</li><li>compressive strength performance of the proposed blends in Nigerian conditions</li><li>availability and quality of supplementary cementitious materials in Nigeria</li></ul></div>
       <div class="card" style="margin-top:8px"><ul><li>Map Nigeria’s regional waste streams (fly ash, rice husk ash, palm oil fuel ash) to identify under‑utilized pozzolanic materials that could replace a larger share of clinker and cut costs.</li><li>Perform a techno‑economic simulation comparing energy‑intensive clinker production versus low‑temperature geopolymer curing to quantify savings and emissions reductions at scale.</li><li>Pilot a blended cement trial that incorporates locally quarried limestone and calcined clay (LC³) and test its early‑strength development to target faster construction cycles.</li><li>Develop a regulatory and market entry roadmap that addresses Nigerian Standard (SON) approvals, branding for “high‑strength low‑cost” cement, and incentives for using industrial by‑products.</li></ul></div>
+      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
+        <input type="hidden" name="goal" value="Give me 2 different complete stronger and cheaper than dangote  cement formula and how to produce it in Naira dangote cement is 13 000 in retail">
+        <button type="submit" class="delete-btn">Delete this entry</button>
+      </form>
     </div>
     
     <div class="entry">
@@ -237,6 +264,10 @@ We know Dangote’s Portland cement is a high‑clinker product priced ~13 000
       
       <div class="check-box"><p class="check-box-label">Verify externally before relying on this</p><ul><li>Dangote cement composition</li><li>Dangote cement compressive strength specification</li><li>current market price of clinker in Nigeria</li><li>current market price of fly ash</li><li>slag</li><li>limestone</li><li>gypsum in Nigeria</li><li>current electricity cost in Nigeria</li><li>regulatory limits on clinker reduction for Portland‑type cement.</li></ul></div>
       <div class="card" style="margin-top:8px"><ul><li>Investigate the use of locally sourced volcanic tuff as a pozzolanic additive to replace a portion of clinker, potentially lowering fuel costs and carbon emissions while boosting long‑term strength.</li><li>Explore integrating nano‑silica derived from agricultural rice husk ash into the mix to enhance early strength development, allowing reduced kiln time and energy consumption.</li><li>Assess the financial and operational impact of a circular economy model where cement plant waste heat is captured to power on‑site grinding mills, cutting electricity expenses.</li><li>Evaluate the regulatory risk of changing the cement composition on the basis of emerging Nigerian standards for eco‑friendly construction materials, which could affect market acceptance.</li></ul></div>
+      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
+        <input type="hidden" name="goal" value="Give me 2 different complete stronger and cheaper than dangote  cement formula and how to produce it in Naira ">
+        <button type="submit" class="delete-btn">Delete this entry</button>
+      </form>
     </div>
     
     <div class="entry">
@@ -257,6 +288,10 @@ Query the internal Knowledge Graph for the latest cost‑per‑kilogram data on 
       
       
       <div class="card" style="margin-top:8px"><ul><li>Explore upcycling waste greases from biodiesel production (e.g., used methyl ester residues) as high‑value soap‑forming fats, evaluating their saponification values and potential for reduced raw‑material costs.</li><li>Investigate synergistic blends of natural polymer thickeners (e.g., xanthan gum or konjac glucomannan) with low‑cost surfactants to boost hardness and lather while lowering the proportion of expensive fatty acids.</li><li>Conduct a life‑cycle cost–benefit analysis of integrating a closed‑loop water‑recovery system in the soap‑making process to cut utility expenses and improve product consistency, a factor often overlooked in ingredient‑focused studies.</li></ul></div>
+      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
+        <input type="hidden" name="goal" value="Design and give me cheaper but better ingredients for solid soap">
+        <button type="submit" class="delete-btn">Delete this entry</button>
+      </form>
     </div>
     
     <div class="entry">
@@ -282,6 +317,10 @@ Run a quick diagnostic query on Memory to check if the user has previously indic
       
       
       <div class="card" style="margin-top:8px"><ul><li>Apply the “dual problem” mindset: for each calculus problem, formulate its inverse (e.g., turn a differentiation task into an integration task) and solve both to uncover hidden symmetries and shortcuts.</li><li>Use spaced‑repetition flashcards that pair a visual representation of a function with a specific limit, derivative, or integral rule, forcing the brain to retrieve the technique in multiple contexts.</li><li>Integrate dimensional analysis from physics: treat calculus expressions as carrying units, then check consistency to spot algebraic errors or suggest alternative solution paths.</li><li>Adopt a “proof‑first” habit: before crunching numbers, sketch a brief informal proof of why a technique should work, which often reveals a more elegant method or a hidden constraint.</li></ul></div>
+      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
+        <input type="hidden" name="goal" value="Give me a better ways to solve calculus">
+        <button type="submit" class="delete-btn">Delete this entry</button>
+      </form>
     </div>
     
     <div class="entry">
@@ -293,6 +332,10 @@ Run a quick diagnostic query on Memory to check if the user has previously indic
 </li></ul>
       
       <div class="card" style="margin-top:8px"><ul><li>Possible improvement: Understand the goal</li><li>Possible improvement: Gather knowledge</li><li>Possible improvement: Create strategy</li><li>Possible improvement: Execute tasks</li><li>Possible improvement: Verify results</li></ul></div>
+      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
+        <input type="hidden" name="goal" value="Design a cement that is 40% cheaper and stronger.">
+        <button type="submit" class="delete-btn">Delete this entry</button>
+      </form>
     </div>
     
     <div class="entry">
@@ -302,6 +345,10 @@ Run a quick diagnostic query on Memory to check if the user has previously indic
       
       
       <div class="card" style="margin-top:8px"><ul><li>Possible improvement: Understand the goal</li><li>Possible improvement: Gather knowledge</li><li>Possible improvement: Create strategy</li><li>Possible improvement: Execute tasks</li><li>Possible improvement: Verify results</li></ul></div>
+      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
+        <input type="hidden" name="goal" value="Build NEXUS">
+        <button type="submit" class="delete-btn">Delete this entry</button>
+      </form>
     </div>
     
 </div>
