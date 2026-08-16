@@ -189,164 +189,24 @@ button:active { opacity: 0.85; }
   and a running Python backend, neither of which static hosting can hold.</p>
   
     <div class="entry">
-      <p class="entry-goal">Design a cheaper cement and give ingredients  <span class="tag llm">llm</span></p>
-      <p class="entry-time">2026-08-06 20:12:38.458</p>
-      <div class="card"><p>**Reasoning (149 words)**  
-1. **What’s known** – Blended cements replace part of the high‑clinker Portland cement with supplementary cementitious materials (SCMs) such as fly ash, slag, or pozzolans. Reducing clinker lowers fuel and CO₂ costs while still achieving comparable compressive strength if the SCMs are properly proportioned and activated.  
-2. **What’s uncertain** – The optimal percentage of each SCM for a target cost ≤ current market price, the required fineness of the SCMs, and any adjustments to water‑to‑cement ratio needed to maintain workability and strength. Local availability and price of fly ash or other SCMs also affect feasibility.  
-3. **Next concrete action** – Compile a cost‑and‑supply database for locally available fly ash, slag, and pozzolan, then run a simple mix‑design spreadsheet (e.g., using ACI 211.1) to identify a blend that meets ASTM C150 grade 42.5 with ≤ 30 % clinker replacement and projected cost savings of ≥ 10 %.</p></div>
-      <ul class="meta"><li class="issue">plan-mismatch</li></ul>
-      <div class="check-box"><p class="check-box-label">Verify externally before relying on this</p><ul><li>current market price</li><li>projected cost savings figure</li></ul></div>
-      <div class="card" style="margin-top:8px"><ul><li>Investigate the use of locally sourced industrial bio‑char as a partial pozzolan to replace a portion of fly ash, assessing its effect on both cost and carbon sequestration potential.</li><li>Examine supply‑chain resilience by mapping the geographic co‑location of raw material sources (e.g., slag, calcined clay) with major construction hubs, identifying “material corridors” that could reduce transportation emissions and logistics costs.</li><li>Conduct a lifecycle‑cost sensitivity analysis that incorporates future regulatory carbon taxes and potential subsidies for low‑carbon binders, revealing whether a slightly higher upfront material cost could become economically advantageous over the product’s service life.</li></ul></div>
-      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
-        <input type="hidden" name="goal" value="Design a cheaper cement and give ingredients ">
-        <button type="submit" class="delete-btn">Delete this entry</button>
-      </form>
-    </div>
-    
-    <div class="entry">
-      <p class="entry-goal">Lets create a new simple formula to solve calculus <span class="tag llm">llm</span></p>
-      <p class="entry-time">2026-08-04 11:26:52.831</p>
-      <div class="card"><p>**Reasoning (143 words)**  
-**Known:** Calculus provides standard rules (power, product, chain, quotient) that reduce many derivative and integral problems to algebraic manipulation. Simple formulas such as \(d/dx[x^n]=nx^{n-1}\) already capture a large class of functions.  
+      <p class="entry-goal">Design a cheaper cement and give ingredients <span class="tag llm">llm</span></p>
+      <p class="entry-time">2026-08-16 07:14:36.647</p>
+      <div class="card"><p>**Reasoning**  
+What we know: Blended cement replaces part of the high‑energy clinker with supplementary cementitious materials (SCMs) such as fly ash, slag, or limestone. This lowers material cost and CO₂ emissions while still attaining compressive strengths comparable to ordinary Portland cement (OPC) when the blend is properly proportioned. Dangote’s low‑cost cement uses a high SCM share, showing commercial viability.
 
-**Uncertain:** Whether a single “universal” simple formula can replace the existing rule set without loss of generality is unclear; complex functions (e.g., transcendental, piecewise) may resist reduction to a concise expression. The trade‑off between simplicity and expressive power is not quantified.  
+What is uncertain: The optimal SCM type and replacement level for a specific local market (raw‑material cost, availability, and required strength class). Also, the impact of SCM fineness and curing regime on early‑age strength versus long‑term performance.
 
-**Next concrete action:** Conduct a focused literature scan for “compact derivative representations” (e.g., using operator notation, automatic differentiation, or differential algebra) and collect at least three candidate compact forms. Then test each on a representative set of functions (polynomial, exponential, trigonometric) to assess accuracy and simplicity.</p></div>
-      <ul class="meta"><li class="issue">unproven universal formula claim</li></ul>
-      
-      <div class="card" style="margin-top:8px"><ul><li>Investigate whether a unified “difference‑quotient shortcut” can be derived for any polynomial by expressing the derivative as a weighted sum of its finite differences at strategically chosen points, potentially bypassing limit notation entirely.</li><li>Explore extending the simplified formula to piecewise‑defined functions by incorporating continuity and differentiability checks at the breakpoints, thus creating a hybrid rule that automatically flags non‑differentiable regions.</li><li>Examine the impact of rounding errors when the new formula is implemented in low‑precision arithmetic (e.g., on microcontrollers), and devise error‑bounding techniques that guarantee results stay within a prescribed tolerance.</li><li>Assess whether the proposed expression can be generalized to handle implicit differentiation scenarios, such as solving for dy/dx in equations where y appears on both sides, by reformulating the rule in terms of total differentials.</li></ul></div>
-      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
-        <input type="hidden" name="goal" value="Lets create a new simple formula to solve calculus">
-        <button type="submit" class="delete-btn">Delete this entry</button>
-      </form>
-    </div>
-    
-    <div class="entry">
-      <p class="entry-goal">Lets create a new simple formula to solve calculus  <span class="tag llm">llm</span></p>
-      <p class="entry-time">2026-08-04 05:12:21.023</p>
-      <div class="card"><p>**Reasoning (120 words)**  
-**What’s known:** NEXUS already stores the “high‑clinker Portland formula” (a cement composition relation) and data on Dangote cement. We also have standard calculus tools: limits, derivatives, integrals, and simple approximation rules (e.g., linearization).  
+**Concrete next action** – Conduct a short literature review (e.g., ASTM C595, EN 197‑1) to identify proven clinker‑SCM ratios that achieve target 28‑day compressive strength at ≤ 70 % of OPC cost, then plan a pilot‑batch trial using locally sourced fly ash and limestone.
 
-**What’s uncertain:** How a cement‑related formula could inspire a new calculus expression is unclear; no direct mathematical link has been documented. It is also uncertain which class of problems (e.g., optimization, area) the new formula should target.  
-
-**Next concrete action:** Conduct a focused literature scan for “simple closed‑form approximations in calculus” (e.g., first‑order Taylor, trapezoidal rule) and map any structural parallels to the high‑clinker formula’s parameter‑combination pattern. This will reveal whether a transferable template exists.</p></div>
+Clinker → is component of → Blended cement  
+Fly ash → serves as → SCM  
+SCMs → replace portion of → Clinker  
+Blended cement → can achieve → comparable compressive strength</p></div>
       
-      <div class="check-box"><p class="check-box-label">Verify externally before relying on this</p><ul><li>high‑clinker Portland formula existence</li><li>NEXUS storage of Dangote cement data</li></ul></div>
-      <div class="card" style="margin-top:8px"><ul><li>Explore a unified “operator shortcut” that combines differentiation and integration symbols into a single reversible mapping, revealing hidden symmetries between the two processes.</li><li>Investigate whether expressing functions in a mixed basis of orthogonal polynomials and exponential kernels can yield a universal product‑rule formula that works for any combination of elementary functions.</li><li>Assess the risk that a newly proposed compact formula might inadvertently mask domain‑specific singularities, leading users to apply it where limits or discontinuities invalidate the result.</li></ul></div>
+      <div class="check-box"><p class="check-box-label">Verify externally before relying on this</p><ul><li>Dangote&#x27;s low‑cost cement SCM share</li><li>current OPC cost versus target ≤ 70 % cost</li><li>specific clinker‑SCM ratios cited in ASTM C595 and EN 197‑1 for target 28‑day strength.</li></ul></div>
+      <div class="card" style="margin-top:8px"><ul><li>Examine the feasibility of converting abundant agricultural residues (e.g., sugarcane bagasse ash, coconut husk ash) into high‑reactivity pozzolans through low‑temperature calcination, creating a locally sourced SCM with minimal energy input.</li><li>Model a hybrid cement‑geopolymer system where a small proportion of traditional clinker is replaced by alkali‑activated slag or fly ash, leveraging waste alkaline liquids from nearby industries to reduce both material and chemical costs.</li><li>Conduct a life‑cycle cost analysis that includes potential revenue from carbon‑credit schemes or green‑bond financing for low‑emission cement formulations, turning environmental benefits into direct financial incentives.</li><li>Develop a risk‑matrix that maps regional availability, regulatory restrictions, and long‑term stability of each low‑cost SCM, ensuring supply‑chain resilience against geopolitical or environmental disruptions.</li></ul></div>
       <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
-        <input type="hidden" name="goal" value="Lets create a new simple formula to solve calculus ">
-        <button type="submit" class="delete-btn">Delete this entry</button>
-      </form>
-    </div>
-    
-    <div class="entry">
-      <p class="entry-goal">Give me 2 different complete stronger and cheaper than dangote  cement formula and how to produce it in Naira dangote cement is 13 000 in retail <span class="tag llm">llm</span></p>
-      <p class="entry-time">2026-08-04 05:10:34.232</p>
-      <div class="card"><p>**Reasoning (149 words)**  
-We know Dangote’s Portland cement is a high‑clinker product priced ~13 000 NGN / bag. To beat that price while delivering equal or higher compressive strength, we can lower the clinker share and replace it with inexpensive supplementary cementitious materials (SCMs) that also boost later‑age strength: (1) a fly‑ash‑rich blended cement (≈45 % clinker, 40 % fly ash, 10 % slag, 5 % gypsum) and (2) a limestone‑slag blend (≈55 % clinker, 30 % slag, 10 % limestone, 5 % gypsum). Both use the “high‑clinker” principle: less clinker → lower fuel/CO₂ cost, while SCMs supply pozzolanic activity for strength. Uncertain factors: current Nigerian market prices for fly ash, slag, limestone, gypsum, and electricity; exact grind fineness needed for target 42.5 MPa at 28 days; logistics of sourcing quality SCMs. **Next concrete action:** gather up‑to‑date local prices for clinker, fly ash, slag, limestone, and gypsum, then compute a per‑bag cost for each blend to verify they fall below 13 000 NGN.</p></div>
-      
-      <div class="check-box"><p class="check-box-label">Verify externally before relying on this</p><ul><li>current market price of Dangote cement</li><li>local prices for clinker</li><li>fly ash</li><li>slag</li><li>limestone</li><li>gypsum</li><li>compressive strength performance of the proposed blends in Nigerian conditions</li><li>availability and quality of supplementary cementitious materials in Nigeria</li></ul></div>
-      <div class="card" style="margin-top:8px"><ul><li>Map Nigeria’s regional waste streams (fly ash, rice husk ash, palm oil fuel ash) to identify under‑utilized pozzolanic materials that could replace a larger share of clinker and cut costs.</li><li>Perform a techno‑economic simulation comparing energy‑intensive clinker production versus low‑temperature geopolymer curing to quantify savings and emissions reductions at scale.</li><li>Pilot a blended cement trial that incorporates locally quarried limestone and calcined clay (LC³) and test its early‑strength development to target faster construction cycles.</li><li>Develop a regulatory and market entry roadmap that addresses Nigerian Standard (SON) approvals, branding for “high‑strength low‑cost” cement, and incentives for using industrial by‑products.</li></ul></div>
-      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
-        <input type="hidden" name="goal" value="Give me 2 different complete stronger and cheaper than dangote  cement formula and how to produce it in Naira dangote cement is 13 000 in retail">
-        <button type="submit" class="delete-btn">Delete this entry</button>
-      </form>
-    </div>
-    
-    <div class="entry">
-      <p class="entry-goal">Give me 2 different complete stronger and cheaper than dangote  cement formula and how to produce it in Naira  <span class="tag llm">llm</span></p>
-      <p class="entry-time">2026-08-04 05:09:50.815</p>
-      <div class="card"><p>**Reasoning steps (147 words)**  
-1. **What’s known:** Dangote’s cement is a high‑clinker Portland blend (≈95 % clinker, 5 % gypsum). Stronger, cheaper alternatives usually lower the clinker share and add supplementary cementitious materials (SCMs) such as fly ash, slag, limestone, or pozzolans, which reduce material cost and can improve later‑age strength. The target is a mix that meets or exceeds Dangote’s compressive strength (≥ 45 MPa 28 d) at a lower unit cost in Nigerian Naira.  
-2. **Uncertainties:** Exact current cost of clinker, SCMs, and electricity in Nigeria; the precise proportion of each SCM needed to achieve the required strength while staying cost‑effective; local availability of high‑quality SCMs; regulatory limits on clinker reduction for “Portland‑type” cement.  
-3. **Next concrete action:** Gather recent market price data (Naira per tonne) for clinker, fly ash, ground‑granulated blast‑furnace slag, limestone, and gypsum in Nigeria, and obtain published performance curves for blended‑cement mixes with varying clinker‑SCM ratios. This will allow calculation of two candidate formulas and their cost per tonne.</p></div>
-      
-      <div class="check-box"><p class="check-box-label">Verify externally before relying on this</p><ul><li>Dangote cement composition</li><li>Dangote cement compressive strength specification</li><li>current market price of clinker in Nigeria</li><li>current market price of fly ash</li><li>slag</li><li>limestone</li><li>gypsum in Nigeria</li><li>current electricity cost in Nigeria</li><li>regulatory limits on clinker reduction for Portland‑type cement.</li></ul></div>
-      <div class="card" style="margin-top:8px"><ul><li>Investigate the use of locally sourced volcanic tuff as a pozzolanic additive to replace a portion of clinker, potentially lowering fuel costs and carbon emissions while boosting long‑term strength.</li><li>Explore integrating nano‑silica derived from agricultural rice husk ash into the mix to enhance early strength development, allowing reduced kiln time and energy consumption.</li><li>Assess the financial and operational impact of a circular economy model where cement plant waste heat is captured to power on‑site grinding mills, cutting electricity expenses.</li><li>Evaluate the regulatory risk of changing the cement composition on the basis of emerging Nigerian standards for eco‑friendly construction materials, which could affect market acceptance.</li></ul></div>
-      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
-        <input type="hidden" name="goal" value="Give me 2 different complete stronger and cheaper than dangote  cement formula and how to produce it in Naira ">
-        <button type="submit" class="delete-btn">Delete this entry</button>
-      </form>
-    </div>
-    
-    <div class="entry">
-      <p class="entry-goal">Design and give me cheaper but better ingredients for solid soap <span class="tag llm">llm</span></p>
-      <p class="entry-time">2026-08-03 07:36:11</p>
-      <div class="card"><p>**What’s already known**  
-- Solid soap is typically made from a blend of fatty acid salts (e.g., sodium stearate, sodium tallowate) plus optional additives (glycerin, fragrance, botanicals, moisturizers).  
-- Cost drivers are the source of the fatty acids (animal vs. plant oils, refined vs. crude) and any specialty additives.  
-- “Better” can refer to higher lather, gentler skin feel, longer shelf‑life, or lower environmental impact – the exact priority is unclear.  
-
-**What’s uncertain**  
-- Which performance attributes (lather, hardness, moisturizing, sustainability) are most important to you.  
-- Whether you have constraints on sourcing (e.g., vegan, kosher, regional availability).  
-- Current budget limits and target retail price.  
-
-**Concrete next action**  
-Query the internal Knowledge Graph for the latest cost‑per‑kilogram data on common soap‑base fats (e.g., palm kernel oil, coconut oil, soy oil, tallow) and cross‑reference with performance ratings (hardness, lather, moisturizing index). This will produce a shortlist of cheaper candidates that still meet typical “better” criteria, which we can then refine after your priority clarification.</p></div>
-      
-      
-      <div class="card" style="margin-top:8px"><ul><li>Explore upcycling waste greases from biodiesel production (e.g., used methyl ester residues) as high‑value soap‑forming fats, evaluating their saponification values and potential for reduced raw‑material costs.</li><li>Investigate synergistic blends of natural polymer thickeners (e.g., xanthan gum or konjac glucomannan) with low‑cost surfactants to boost hardness and lather while lowering the proportion of expensive fatty acids.</li><li>Conduct a life‑cycle cost–benefit analysis of integrating a closed‑loop water‑recovery system in the soap‑making process to cut utility expenses and improve product consistency, a factor often overlooked in ingredient‑focused studies.</li></ul></div>
-      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
-        <input type="hidden" name="goal" value="Design and give me cheaper but better ingredients for solid soap">
-        <button type="submit" class="delete-btn">Delete this entry</button>
-      </form>
-    </div>
-    
-    <div class="entry">
-      <p class="entry-goal">Give me a better ways to solve calculus <span class="tag llm">llm</span></p>
-      <p class="entry-time">2026-08-03 07:35:10</p>
-      <div class="card"><p>**What we know**  
-- NEXUS already stores the user’s interaction history (Memory).  
-- The Knowledge Graph contains topics, methods, and common pitfalls for calculus (limits, derivatives, integrals, series, multivariable techniques).  
-- The Planning module can sequence instructional content and generate practice workflows.
-
-**What’s uncertain**  
-- The user’s current proficiency level (introductory, intermediate, advanced).  
-- Specific calculus sub‑areas they struggle with (e.g., chain rule vs. integration techniques).  
-- Preferred learning style (visual, symbolic, problem‑driven).
-
-**Reasoning steps**  
-1. Query Memory for any prior hints about the user’s background or earlier calculus queries.  
-2. Use the Knowledge Graph to retrieve a curated list of “high‑impact” strategies (e.g., visualizing limits, mnemonic derivatives, substitution patterns).  
-3. Employ Planning to map those strategies to a tiered curriculum that adapts to skill level.
-
-**Concrete next action**  
-Run a quick diagnostic query on Memory to check if the user has previously indicated their calculus level or specific pain points; then ask a clarifying question to fill any gaps.</p></div>
-      
-      
-      <div class="card" style="margin-top:8px"><ul><li>Apply the “dual problem” mindset: for each calculus problem, formulate its inverse (e.g., turn a differentiation task into an integration task) and solve both to uncover hidden symmetries and shortcuts.</li><li>Use spaced‑repetition flashcards that pair a visual representation of a function with a specific limit, derivative, or integral rule, forcing the brain to retrieve the technique in multiple contexts.</li><li>Integrate dimensional analysis from physics: treat calculus expressions as carrying units, then check consistency to spot algebraic errors or suggest alternative solution paths.</li><li>Adopt a “proof‑first” habit: before crunching numbers, sketch a brief informal proof of why a technique should work, which often reveals a more elegant method or a hidden constraint.</li></ul></div>
-      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
-        <input type="hidden" name="goal" value="Give me a better ways to solve calculus">
-        <button type="submit" class="delete-btn">Delete this entry</button>
-      </form>
-    </div>
-    
-    <div class="entry">
-      <p class="entry-goal">Design a cement that is 40% cheaper and stronger. <span class="tag fallback">fallback</span></p>
-      <p class="entry-time">2026-08-02 10:58:33</p>
-      <div class="card"><p>Using available knowledge, the next action is to work toward &#x27;Design a cement that is 40% cheaper and stronger.&#x27;. (LLM reasoning unavailable: groq API returned 403: error code: 1010
-)</p></div>
-      <ul class="meta"><li class="issue">LLM verification unavailable: groq API returned 403: error code: 1010
-</li></ul>
-      
-      <div class="card" style="margin-top:8px"><ul><li>Possible improvement: Understand the goal</li><li>Possible improvement: Gather knowledge</li><li>Possible improvement: Create strategy</li><li>Possible improvement: Execute tasks</li><li>Possible improvement: Verify results</li></ul></div>
-      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
-        <input type="hidden" name="goal" value="Design a cement that is 40% cheaper and stronger.">
-        <button type="submit" class="delete-btn">Delete this entry</button>
-      </form>
-    </div>
-    
-    <div class="entry">
-      <p class="entry-goal">Build NEXUS <span class="tag fallback">fallback</span></p>
-      <p class="entry-time">2026-08-01 21:17:33</p>
-      <div class="card"><p>Using available knowledge, the next action is to work toward &#x27;Build NEXUS&#x27;. (LLM reasoning unavailable: ANTHROPIC_API_KEY is not set. Run: export ANTHROPIC_API_KEY=sk-ant-... (see README for details))</p></div>
-      
-      
-      <div class="card" style="margin-top:8px"><ul><li>Possible improvement: Understand the goal</li><li>Possible improvement: Gather knowledge</li><li>Possible improvement: Create strategy</li><li>Possible improvement: Execute tasks</li><li>Possible improvement: Verify results</li></ul></div>
-      <form method="POST" action="/delete" onsubmit="return confirm('Delete this entry? This can\'t be undone.')">
-        <input type="hidden" name="goal" value="Build NEXUS">
+        <input type="hidden" name="goal" value="Design a cheaper cement and give ingredients">
         <button type="submit" class="delete-btn">Delete this entry</button>
       </form>
     </div>

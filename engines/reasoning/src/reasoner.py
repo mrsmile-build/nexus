@@ -16,7 +16,7 @@ import re
 
 from core.llm_client import ask, LLMError
 
-_RELATION_LINE = re.compile(r"^\s*(.+?)\s*->\s*(.+?)\s*->\s*(.+?)\s*$")
+_RELATION_LINE = re.compile(r"^\s*(.+?)\s*(?:->|\u2192)\s*(.+?)\s*(?:->|\u2192)\s*(.+?)\s*$")
 _MAX_ENTITY_LEN = 60  # sanity limit -- a real entity name, not a stray sentence
 
 

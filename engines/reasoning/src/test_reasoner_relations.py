@@ -50,6 +50,26 @@ print("PASS: fallback mode returns an empty relations list")
 
 print("\nAll reasoner-relation checks passed.")
 
+# Reproduces the exact real leak: the model used unicode arrows (→)
+# instead of the ASCII form, with no RELATIONS: header at all --
+# relations just ran straight into the end of the prose.
+UNICODE_ARROW_RESPONSE = (
+    "What we know: blended cement replaces part of clinker with SCMs.\n"
+    "Concrete next action: plan a pilot-batch trial using local fly ash.\n"
+    "Clinker \u2192 is component of \u2192 Blended cement\n"
+    "Fly ash \u2192 serves as \u2192 SCM\n"
+)
+with mock.patch("engines.reasoning.src.reasoner.ask", return_value=UNICODE_ARROW_RESPONSE):
+    result = Reasoner().reason("Design a cheaper cement", ["Cement"])
+assert "\u2192" not in result["conclusion"], result["conclusion"]
+assert "is component of" not in result["conclusion"], result["conclusion"]
+assert "Concrete next action" in result["conclusion"], result["conclusion"]
+print("PASS: unicode-arrow relations are stripped from the conclusion, prose is kept")
+
+assert ("Clinker", "is component of", "Blended cement") in result["relations"], result["relations"]
+assert ("Fly ash", "serves as", "SCM") in result["relations"], result["relations"]
+print("PASS: unicode-arrow relations are still correctly extracted, not just discarded ->", result["relations"])
+
 # Reproduces the exact real failure: model wrapped the marker in
 # markdown bold and provided no actual relations after it, so the
 # raw "**RELATIONS:**" showed up in the displayed conclusion.
