@@ -199,3 +199,44 @@
 
 ### Tested
 - `test_verifier_plan_check.py`: confirms the literal problematic string is gone from the prompt, confirms the concrete clinker example is present, and confirms that even a worst-case bare-label response still parses without crashing (a prompt-quality risk, not a parser bug).
+
+## Unreleased (18)
+
+### Added
+- `core/export_history.py`: generates a static HTML snapshot of everything in history (`docs/index.html`), reusing the exact same rendering (`render_history_entry`, `STYLE`) as the live server so the two never visually drift apart. Answers the "can we host it on GitHub Pages" question properly: the live app can't (needs Python, a real key, SQLite -- none of which static hosting has), but a frozen snapshot of what NEXUS has already answered genuinely can, since once written it's just HTML with no server dependency.
+- Privacy note lives directly in the module docstring, not just chat: once pushed with Pages enabled, the exported page is public.
+
+### Tested
+- `test_export_history.py` against a real temp-file database, not mocked: empty-state export writes valid HTML without crashing; a real seeded result renders correctly (goal, conclusion, method tag all present); explicit check that no credential-shaped text (`GROQ_API_KEY`, `sk-...`) ever ends up in the exported file, since that file is meant to be public.
+
+### Recovery note
+- Partway through this round, the sandbox lost most of core/ and engines/ (a local environment issue, not anything affecting the actual deployed project on-device). Restored from the last script already delivered and verified working, confirmed with the full regression suite before continuing -- the two new export files were unaffected throughout.
+
+## Unreleased (19)
+
+### Added
+- `/delete` route and a delete button on every history entry -- old entries can now actually be removed, not just accumulated forever. Motivated directly by the public GitHub Pages export showing stale, pre-fix entries (the bare "plan-mismatch" label) with no way to curate what a visitor sees.
+- Backed by `MemoryEngine.forget()`, which already existed from round 1 -- this was wiring a UI to a capability that was already there, not new engine work.
+
+### Tested
+- Full real HTTP round-trip: seeded two entries, confirmed both in `/history`, deleted one, confirmed the page shows only the other, and confirmed directly against the database (not just the rendered page) that the deleted entry is actually gone while the untouched one survives intact.
+
+## Unreleased (20)
+
+### Fixed
+- Third variant of the same relation-parsing leak: this time the model used a unicode arrow (\u2192) instead of the ASCII "->", with no RELATIONS: header at all -- the relation lines just ran straight into the end of the displayed prose. Regex now matches either arrow form.
+
+### Tested
+- `test_reasoner_relations.py`: reproduces the exact real text (unicode arrows, no header) and confirms both that the leaked lines are stripped AND that they're still correctly extracted as usable relations, not just discarded.
+
+## Unreleased (21)
+
+### Added
+- Static export now has real navigation appropriate to what it actually is: client-side search (pure JS, filters the already-embedded entries in-browser, no backend needed) and a link back to the actual GitHub repo. Directly addresses "no chat box, no navigation, doesn't feel like local" -- the chat box genuinely can't exist there (needs a live backend + secret key, structurally impossible on static hosting), but search and a way out to the real source both can.
+
+### Fixed
+- Caught while testing the above, not reported: the static export was including a "Delete this entry" button that POSTs to `/delete` -- a route that doesn't exist anywhere on GitHub Pages. `render_history_entry()` now takes `include_delete` (defaults to True, unchanged for the live server); the export explicitly passes False.
+
+### Tested
+- Generated a real two-entry export and inspected the actual output markup, not just assertions.
+- Explicit checks that the live server's delete button still works unchanged, and that the static export never contains a delete form.

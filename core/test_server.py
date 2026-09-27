@@ -72,6 +72,16 @@ out = render_history_entry(fallback_entry)
 assert "tag fallback" in out
 print("PASS: history entry correctly tags a fallback result")
 
+out = render_history_entry(llm_entry)
+assert 'name="goal" value="Design a cheaper cement"' in out, out
+assert 'action="/delete"' in out, out
+print("PASS: history entry includes a delete form with the correct goal")
+
+out_no_delete = render_history_entry(llm_entry, include_delete=False)
+assert 'action="/delete"' not in out_no_delete, out_no_delete
+assert "Design a cheaper cement" in out_no_delete, out_no_delete
+print("PASS: include_delete=False omits the delete form (for the static export) but keeps the content")
+
 print("\nAll server render checks passed.")
 
 # --- Discovery now shows its own method tag -- previously silent either way ---

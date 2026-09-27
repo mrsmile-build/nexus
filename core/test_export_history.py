@@ -57,4 +57,36 @@ print("PASS: no credential-shaped text ends up in the exported (public) file")
 
 os.remove(TEST_DB)
 os.remove(TEST_OUTPUT)
+
+# --- Client-side search and repo link, added after the first version ---
+memory = MemoryEngine(db_path=TEST_DB)
+memory.store(
+    "result::Design a cheaper cement",
+    {
+        "plan": {"method": "llm", "steps": ["Research SCMs"]},
+        "conclusion": "Fly ash substitution looks promising.",
+        "verification": {"method": "llm", "verified": True, "issues": []},
+        "ideas": [],
+    },
+)
+memory.close()
+
+count = export(db_path=TEST_DB, output_path=TEST_OUTPUT)
+with open(TEST_OUTPUT, encoding="utf-8") as f:
+    page = f.read()
+
+assert 'id="search-box"' in page and "nexusFilter" in page, page
+assert "function nexusFilter" in page, page
+print("PASS: the exported page includes real client-side search, not just a static list")
+
+from core.export_history import REPO_URL
+assert REPO_URL in page, page
+assert 'href="' + REPO_URL + '"' in page, page
+print("PASS: a real link back to the source repo is present ->", REPO_URL)
+
+assert 'action="/delete"' not in page, page
+print("PASS: no non-functional delete form ends up in the static export (nothing to POST to on GitHub Pages)")
+
+os.remove(TEST_DB)
+os.remove(TEST_OUTPUT)
 print("\nAll export-history checks passed.")

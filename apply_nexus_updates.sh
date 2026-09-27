@@ -251,6 +251,47 @@ cat > 'CHANGELOG.md' << 'NEXUS_EOF_MARKER'
 
 ### Tested
 - `test_verifier_plan_check.py`: confirms the literal problematic string is gone from the prompt, confirms the concrete clinker example is present, and confirms that even a worst-case bare-label response still parses without crashing (a prompt-quality risk, not a parser bug).
+
+## Unreleased (18)
+
+### Added
+- `core/export_history.py`: generates a static HTML snapshot of everything in history (`docs/index.html`), reusing the exact same rendering (`render_history_entry`, `STYLE`) as the live server so the two never visually drift apart. Answers the "can we host it on GitHub Pages" question properly: the live app can't (needs Python, a real key, SQLite -- none of which static hosting has), but a frozen snapshot of what NEXUS has already answered genuinely can, since once written it's just HTML with no server dependency.
+- Privacy note lives directly in the module docstring, not just chat: once pushed with Pages enabled, the exported page is public.
+
+### Tested
+- `test_export_history.py` against a real temp-file database, not mocked: empty-state export writes valid HTML without crashing; a real seeded result renders correctly (goal, conclusion, method tag all present); explicit check that no credential-shaped text (`GROQ_API_KEY`, `sk-...`) ever ends up in the exported file, since that file is meant to be public.
+
+### Recovery note
+- Partway through this round, the sandbox lost most of core/ and engines/ (a local environment issue, not anything affecting the actual deployed project on-device). Restored from the last script already delivered and verified working, confirmed with the full regression suite before continuing -- the two new export files were unaffected throughout.
+
+## Unreleased (19)
+
+### Added
+- `/delete` route and a delete button on every history entry -- old entries can now actually be removed, not just accumulated forever. Motivated directly by the public GitHub Pages export showing stale, pre-fix entries (the bare "plan-mismatch" label) with no way to curate what a visitor sees.
+- Backed by `MemoryEngine.forget()`, which already existed from round 1 -- this was wiring a UI to a capability that was already there, not new engine work.
+
+### Tested
+- Full real HTTP round-trip: seeded two entries, confirmed both in `/history`, deleted one, confirmed the page shows only the other, and confirmed directly against the database (not just the rendered page) that the deleted entry is actually gone while the untouched one survives intact.
+
+## Unreleased (20)
+
+### Fixed
+- Third variant of the same relation-parsing leak: this time the model used a unicode arrow (\u2192) instead of the ASCII "->", with no RELATIONS: header at all -- the relation lines just ran straight into the end of the displayed prose. Regex now matches either arrow form.
+
+### Tested
+- `test_reasoner_relations.py`: reproduces the exact real text (unicode arrows, no header) and confirms both that the leaked lines are stripped AND that they're still correctly extracted as usable relations, not just discarded.
+
+## Unreleased (21)
+
+### Added
+- Static export now has real navigation appropriate to what it actually is: client-side search (pure JS, filters the already-embedded entries in-browser, no backend needed) and a link back to the actual GitHub repo. Directly addresses "no chat box, no navigation, doesn't feel like local" -- the chat box genuinely can't exist there (needs a live backend + secret key, structurally impossible on static hosting), but search and a way out to the real source both can.
+
+### Fixed
+- Caught while testing the above, not reported: the static export was including a "Delete this entry" button that POSTs to `/delete` -- a route that doesn't exist anywhere on GitHub Pages. `render_history_entry()` now takes `include_delete` (defaults to True, unchanged for the live server); the export explicitly passes False.
+
+### Tested
+- Generated a real two-entry export and inspected the actual output markup, not just assertions.
+- Explicit checks that the live server's delete button still works unchanged, and that the static export never contains a delete form.
 NEXUS_EOF_MARKER
 
 echo "Writing README.md"
@@ -321,6 +362,115 @@ NEXUS_EOF_MARKER
 
 echo "Writing core/__init__.py"
 touch 'core/__init__.py'
+
+echo "Writing core/export_history.py"
+cat > 'core/export_history.py' << 'NEXUS_EOF_MARKER'
+"""
+NEXUS Static History Export v0.1
+
+Generates a static HTML snapshot of everything in Memory's history --
+suitable for GitHub Pages, which can only ever serve static files. It
+can never run this project's actual backend (that needs Python, a
+real API key, and SQLite; none of that exists in static hosting).
+
+This is NOT NEXUS "hosted." It's a read-only snapshot of what NEXUS
+has already answered, frozen at export time. Asking a new question
+still only works locally, via `python -m core.server`.
+
+Privacy: once this is committed and pushed with GitHub Pages enabled,
+it's public. Anyone with the link can see every question and answer
+in it, at the time of the last export.
+
+Run:
+    python -m core.export_history
+
+Writes docs/index.html (alongside your existing docs/nexus_vision.md
+-- doesn't touch it). One-time setup after the first export:
+GitHub repo -> Settings -> Pages -> Deploy from a branch -> main ->
+/docs. After that, re-running this script and pushing updates the
+live page.
+"""
+
+import os
+
+from core.server import STYLE, render_history_entry
+from engines.memory.src.memory import MemoryEngine
+
+OUTPUT_PATH = "docs/index.html"
+MAX_ENTRIES = 1000  # generous ceiling; revisit if history genuinely exceeds this
+
+REPO_URL = "https://github.com/mrsmile-build/nexus"
+
+PAGE_TEMPLATE = """<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEXUS &middot; History</title>
+<style>{style}</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="brand">Nexus &middot; static snapshot &middot; read-only</p>
+  <p class="nav"><a href="{repo_url}">View the source on GitHub &rarr;</a></p>
+  <h1>NEXUS History</h1>
+  <p class="hint">A snapshot of past questions and answers, frozen at export
+  time. This page can't think about new ones &mdash; that needs a real API
+  key and a running Python backend, neither of which static hosting can
+  hold. Search below works entirely in your browser; everything on this
+  page is already here, nothing is fetched.</p>
+  <input type="text" id="search-box" class="search-box" placeholder="Search past questions and answers" oninput="nexusFilter()">
+  <p id="no-results" class="empty" style="display:none">No entries match that search.</p>
+  {entries_html}
+</div>
+<script>
+function nexusFilter() {{
+  var term = document.getElementById('search-box').value.toLowerCase();
+  var entries = document.querySelectorAll('.entry');
+  var visible = 0;
+  entries.forEach(function(entry) {{
+    var matches = entry.textContent.toLowerCase().indexOf(term) !== -1;
+    entry.style.display = matches ? '' : 'none';
+    if (matches) visible++;
+  }});
+  document.getElementById('no-results').style.display =
+    (visible === 0 && term !== '') ? '' : 'none';
+}}
+</script>
+</body>
+</html>"""
+
+
+def export(db_path="data/memory.db", output_path=OUTPUT_PATH):
+    memory = MemoryEngine(db_path=db_path)
+    entries = memory.recent(prefix="result::", limit=MAX_ENTRIES)
+    memory.close()
+
+    entries_html = (
+        "".join(render_history_entry(e, include_delete=False) for e in entries)
+        if entries
+        else '<p class="empty">Nothing recorded yet.</p>'
+    )
+
+    directory = os.path.dirname(output_path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(PAGE_TEMPLATE.format(style=STYLE, repo_url=REPO_URL, entries_html=entries_html))
+
+    return len(entries)
+
+
+def main():
+    count = export()
+    print(f"Wrote {OUTPUT_PATH} with {count} entries.")
+    print("git add docs/index.html && git commit -m 'Update history snapshot' && git push")
+
+
+if __name__ == "__main__":
+    main()
+NEXUS_EOF_MARKER
 
 echo "Writing core/llm_client.py"
 cat > 'core/llm_client.py' << 'NEXUS_EOF_MARKER'
@@ -770,6 +920,7 @@ button:active { opacity: 0.85; }
 .nav a { color: var(--teal); text-decoration: none; font-family: var(--mono); font-size: 13px; }
 .nav a:hover { text-decoration: underline; }
 .search-form { display: flex; gap: 8px; margin-bottom: 20px; }
+.search-box { width: 100%; box-sizing: border-box; margin-bottom: 24px; }
 .entry { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
 .entry:last-child { border-bottom: none; }
 .entry-goal { font-size: 17px; font-weight: 600; margin: 0 0 4px; }
@@ -786,6 +937,17 @@ button:active { opacity: 0.85; }
 }
 .feedback-form button:active { border-color: var(--teal); }
 .feedback-note { color: var(--teal); font-family: var(--mono); font-size: 13px; margin-top: 16px; }
+.delete-btn {
+  background: none;
+  border: none;
+  color: var(--rust);
+  font-family: var(--mono);
+  font-size: 12px;
+  margin-top: 12px;
+  padding: 4px 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
 """
 
 PAGE_TEMPLATE = """<!doctype html>
@@ -906,7 +1068,7 @@ def render_result(outcome):
     """
 
 
-def render_history_entry(entry):
+def render_history_entry(entry, include_delete=True):
     goal = entry["key"][len("result::"):]
     value = entry["value"]
     verification = value.get("verification") or {}
@@ -929,6 +1091,16 @@ def render_history_entry(entry):
     ideas = value.get("ideas") or []
     ideas_html = "".join(f"<li>{html.escape(i)}</li>" for i in ideas)
 
+    delete_html = ""
+    if include_delete:
+        delete_html = (
+            '<form method="POST" action="/delete" '
+            "onsubmit=\"return confirm('Delete this entry? This can\\'t be undone.')\">"
+            f'<input type="hidden" name="goal" value="{html.escape(goal)}">'
+            '<button type="submit" class="delete-btn">Delete this entry</button>'
+            "</form>"
+        )
+
     return f"""
     <div class="entry">
       <p class="entry-goal">{html.escape(goal)} {tag_html}</p>
@@ -937,6 +1109,7 @@ def render_history_entry(entry):
       {f'<ul class="meta">{issues_html}</ul>' if issues_html else ''}
       {check_box_html}
       {f'<div class="card" style="margin-top:8px"><ul>{ideas_html}</ul></div>' if ideas_html else ''}
+      {delete_html}
     </div>
     """
 
@@ -1018,6 +1191,15 @@ class Handler(BaseHTTPRequestHandler):
             self._send_html(body)
             return
 
+        if self.path == "/delete":
+            goal = fields.get("goal", "")
+            if goal:
+                self.engine.memory.forget(f"result::{goal}")
+            self.send_response(303)
+            self.send_header("Location", "/history")
+            self.end_headers()
+            return
+
         self.send_response(404)
         self.end_headers()
 
@@ -1047,6 +1229,102 @@ def main():
 
 if __name__ == "__main__":
     main()
+NEXUS_EOF_MARKER
+
+echo "Writing core/test_export_history.py"
+cat > 'core/test_export_history.py' << 'NEXUS_EOF_MARKER'
+"""
+Tests core/export_history.py against a real (temp-file) database,
+not mocked -- SQLite persistence and real HTML rendering both need
+to actually work together for this to be worth anything. Run via:
+
+    python -m core.test_export_history
+"""
+
+import os
+
+from core.export_history import export
+from engines.memory.src.memory import MemoryEngine
+
+TEST_DB = "test_export_history.db"
+TEST_OUTPUT = "test_export_history_output.html"
+
+for path in (TEST_DB, TEST_OUTPUT):
+    if os.path.exists(path):
+        os.remove(path)
+
+# Nothing recorded yet -> a real file with an empty-state message, not a crash.
+count = export(db_path=TEST_DB, output_path=TEST_OUTPUT)
+assert count == 0, count
+with open(TEST_OUTPUT, encoding="utf-8") as f:
+    empty_page = f.read()
+assert "Nothing recorded yet" in empty_page, empty_page
+assert "<html>" in empty_page and "</html>" in empty_page
+print("PASS: exporting with no history yet writes a real, valid, empty-state page")
+
+# Seed real results the way ThinkingEngine actually would, then export again.
+memory = MemoryEngine(db_path=TEST_DB)
+memory.store(
+    "result::Design a cheaper cement",
+    {
+        "plan": {"method": "llm", "steps": ["Research SCMs"]},
+        "conclusion": "Fly ash substitution looks promising.",
+        "verification": {"method": "llm", "verified": True, "issues": []},
+        "ideas": ["Check regional fly ash availability"],
+    },
+)
+memory.close()
+
+count = export(db_path=TEST_DB, output_path=TEST_OUTPUT)
+assert count == 1, count
+with open(TEST_OUTPUT, encoding="utf-8") as f:
+    page = f.read()
+assert "Design a cheaper cement" in page, page
+assert "Fly ash substitution looks promising" in page, page
+assert "tag llm" in page, page
+print("PASS: a real seeded result renders correctly in the exported static page")
+
+# The privacy-relevant claim in the docstring/output should actually
+# be true: no API key or provider name should ever appear in the
+# exported file.
+assert "GROQ_API_KEY" not in page and "sk-" not in page, page
+print("PASS: no credential-shaped text ends up in the exported (public) file")
+
+os.remove(TEST_DB)
+os.remove(TEST_OUTPUT)
+
+# --- Client-side search and repo link, added after the first version ---
+memory = MemoryEngine(db_path=TEST_DB)
+memory.store(
+    "result::Design a cheaper cement",
+    {
+        "plan": {"method": "llm", "steps": ["Research SCMs"]},
+        "conclusion": "Fly ash substitution looks promising.",
+        "verification": {"method": "llm", "verified": True, "issues": []},
+        "ideas": [],
+    },
+)
+memory.close()
+
+count = export(db_path=TEST_DB, output_path=TEST_OUTPUT)
+with open(TEST_OUTPUT, encoding="utf-8") as f:
+    page = f.read()
+
+assert 'id="search-box"' in page and "nexusFilter" in page, page
+assert "function nexusFilter" in page, page
+print("PASS: the exported page includes real client-side search, not just a static list")
+
+from core.export_history import REPO_URL
+assert REPO_URL in page, page
+assert 'href="' + REPO_URL + '"' in page, page
+print("PASS: a real link back to the source repo is present ->", REPO_URL)
+
+assert 'action="/delete"' not in page, page
+print("PASS: no non-functional delete form ends up in the static export (nothing to POST to on GitHub Pages)")
+
+os.remove(TEST_DB)
+os.remove(TEST_OUTPUT)
+print("\nAll export-history checks passed.")
 NEXUS_EOF_MARKER
 
 echo "Writing core/test_llm_client.py"
@@ -1394,6 +1672,16 @@ out = render_history_entry(fallback_entry)
 assert "tag fallback" in out
 print("PASS: history entry correctly tags a fallback result")
 
+out = render_history_entry(llm_entry)
+assert 'name="goal" value="Design a cheaper cement"' in out, out
+assert 'action="/delete"' in out, out
+print("PASS: history entry includes a delete form with the correct goal")
+
+out_no_delete = render_history_entry(llm_entry, include_delete=False)
+assert 'action="/delete"' not in out_no_delete, out_no_delete
+assert "Design a cheaper cement" in out_no_delete, out_no_delete
+print("PASS: include_delete=False omits the delete form (for the static export) but keeps the content")
+
 print("\nAll server render checks passed.")
 
 # --- Discovery now shows its own method tag -- previously silent either way ---
@@ -1518,6 +1806,12 @@ Store result
 - Physics discovery
 - AI architecture discovery
 NEXUS_EOF_MARKER
+
+echo "Writing engines/discovery/__init__.py"
+touch 'engines/discovery/__init__.py'
+
+echo "Writing engines/discovery/src/__init__.py"
+touch 'engines/discovery/src/__init__.py'
 
 echo "Writing engines/discovery/src/discovery.py"
 cat > 'engines/discovery/src/discovery.py' << 'NEXUS_EOF_MARKER'
@@ -2778,7 +3072,7 @@ import re
 
 from core.llm_client import ask, LLMError
 
-_RELATION_LINE = re.compile(r"^\s*(.+?)\s*->\s*(.+?)\s*->\s*(.+?)\s*$")
+_RELATION_LINE = re.compile(r"^\s*(.+?)\s*(?:->|\u2192)\s*(.+?)\s*(?:->|\u2192)\s*(.+?)\s*$")
 _MAX_ENTITY_LEN = 60  # sanity limit -- a real entity name, not a stray sentence
 
 
@@ -2993,6 +3287,26 @@ assert fallback_result["relations"] == [], fallback_result
 print("PASS: fallback mode returns an empty relations list")
 
 print("\nAll reasoner-relation checks passed.")
+
+# Reproduces the exact real leak: the model used unicode arrows (→)
+# instead of the ASCII form, with no RELATIONS: header at all --
+# relations just ran straight into the end of the prose.
+UNICODE_ARROW_RESPONSE = (
+    "What we know: blended cement replaces part of clinker with SCMs.\n"
+    "Concrete next action: plan a pilot-batch trial using local fly ash.\n"
+    "Clinker \u2192 is component of \u2192 Blended cement\n"
+    "Fly ash \u2192 serves as \u2192 SCM\n"
+)
+with mock.patch("engines.reasoning.src.reasoner.ask", return_value=UNICODE_ARROW_RESPONSE):
+    result = Reasoner().reason("Design a cheaper cement", ["Cement"])
+assert "\u2192" not in result["conclusion"], result["conclusion"]
+assert "is component of" not in result["conclusion"], result["conclusion"]
+assert "Concrete next action" in result["conclusion"], result["conclusion"]
+print("PASS: unicode-arrow relations are stripped from the conclusion, prose is kept")
+
+assert ("Clinker", "is component of", "Blended cement") in result["relations"], result["relations"]
+assert ("Fly ash", "serves as", "SCM") in result["relations"], result["relations"]
+print("PASS: unicode-arrow relations are still correctly extracted, not just discarded ->", result["relations"])
 
 # Reproduces the exact real failure: model wrapped the marker in
 # markdown bold and provided no actual relations after it, so the
@@ -3480,6 +3794,12 @@ Ensure every important answer is as accurate as possible before it is returned.
 - Cross-source validation
 - Self-critique loops
 NEXUS_EOF_MARKER
+
+echo "Writing engines/verification/__init__.py"
+touch 'engines/verification/__init__.py'
+
+echo "Writing engines/verification/src/__init__.py"
+touch 'engines/verification/src/__init__.py'
 
 echo "Writing engines/verification/src/test_verifier.py"
 cat > 'engines/verification/src/test_verifier.py' << 'NEXUS_EOF_MARKER'
