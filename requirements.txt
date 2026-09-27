@@ -1,0 +1,5 @@
+pydantic<2
+fastapi<0.100
+uvicorn
+sympy
+httpx
