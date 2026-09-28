@@ -46,7 +46,8 @@ Output ONLY a valid JSON object with these exact keys:
 """
         prompt = f"Target: {target_material}\nConstraints: {constraints}"
         try:
-            raw = ask(prompt, system=system, max_tokens=1500)
+            # Increased max_tokens to 3000 so it doesn't get cut off mid-JSON
+            raw = ask(prompt, system=system, max_tokens=3000)
             clean = raw.strip()
             if clean.startswith("```json"): clean = clean[7:]
             if clean.startswith("```"): clean = clean[3:]
