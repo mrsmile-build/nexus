@@ -12,3 +12,4 @@ __pycache__/
 
 # Secrets -- nexus.sh already scans for this; keep the promise
 .env
+logs_*.txt
