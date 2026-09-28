@@ -8,6 +8,7 @@ from engines.business.src.business import BusinessEngine
 from engines.nature_core.src.nature_core import NatureCore
 from engines.materials.src.materials import MaterialsEngine
 from engines.reverse_engineering.src.decomposer import Decomposer
+from engines.agriculture.src.agriculture import AgricultureEngine
 
 app = FastAPI(title="NEXUS Cognitive Core")
 engine = ThinkingEngine()
@@ -16,6 +17,7 @@ biz_engine = BusinessEngine()
 nature_core = NatureCore()
 materials_engine = MaterialsEngine()
 decomposer = Decomposer()
+ag_engine = AgricultureEngine()
 
 NEXUS_API_KEY = os.environ.get("NEXUS_API_KEY", "")
 key_header = APIKeyHeader(name="X-NEXUS-Key", auto_error=False)
@@ -40,31 +42,31 @@ class MaterialRequest(BaseModel):
     constraints: str
 class DecomposeRequest(BaseModel):
     product: str
+class AgRequest(BaseModel):
+    goal: str
+    current_state: str
 
 @app.get("/")
 def read_root():
     return {"status": "NEXUS Cognitive Core is online and ready."}
 
 @app.post("/think", dependencies=[Depends(require_key)])
-def think(request: GoalRequest):
-    return engine.think(request.goal)
+def think(request: GoalRequest): return engine.think(request.goal)
 
 @app.post("/math", dependencies=[Depends(require_key)])
-def math(request: MathRequest):
-    return math_tool.calculate(request.expression)
+def math(request: MathRequest): return math_tool.calculate(request.expression)
 
 @app.post("/mentor", dependencies=[Depends(require_key)])
-def mentor(request: BizRequest):
-    return biz_engine.plan(request.situation, request.goal)
+def mentor(request: BizRequest): return biz_engine.plan(request.situation, request.goal)
 
 @app.post("/nature", dependencies=[Depends(require_key)])
-def nature(request: NatureRequest):
-    return nature_core.investigate(request.subject, request.tradition)
+def nature(request: NatureRequest): return nature_core.investigate(request.subject, request.tradition)
 
 @app.post("/materials", dependencies=[Depends(require_key)])
-def materials(request: MaterialRequest):
-    return materials_engine.formulate(request.target_material, request.constraints)
+def materials(request: MaterialRequest): return materials_engine.formulate(request.target_material, request.constraints)
 
 @app.post("/decompose", dependencies=[Depends(require_key)])
-def decompose(request: DecomposeRequest):
-    return decomposer.teardown(request.product)
+def decompose(request: DecomposeRequest): return decomposer.teardown(request.product)
+
+@app.post("/grow", dependencies=[Depends(require_key)])
+def grow(request: AgRequest): return ag_engine.optimize(request.goal, request.current_state)

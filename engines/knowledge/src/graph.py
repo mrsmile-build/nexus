@@ -20,7 +20,7 @@ class KnowledgeGraph:
             if directory:
                 os.makedirs(directory, exist_ok=True)
 
-        self.conn = sqlite3.connect(self.db_path)
+        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self.conn.execute(
             """
             CREATE TABLE IF NOT EXISTS nodes (
