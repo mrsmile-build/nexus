@@ -70,3 +70,14 @@ def decompose(request: DecomposeRequest): return decomposer.teardown(request.pro
 
 @app.post("/grow", dependencies=[Depends(require_key)])
 def grow(request: AgRequest): return ag_engine.optimize(request.goal, request.current_state)
+
+from engines.tools.src.vision_tool import VisionTool
+vision_tool = VisionTool()
+
+class VisionRequest(BaseModel):
+    image_url: str
+    question: str
+
+@app.post("/see", dependencies=[Depends(require_key)])
+def see(request: VisionRequest):
+    return vision_tool.see(request.image_url, request.question)
