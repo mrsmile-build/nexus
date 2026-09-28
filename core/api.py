@@ -7,6 +7,7 @@ from engines.tools.src.math_tool import MathTool
 from engines.business.src.business import BusinessEngine
 from engines.nature_core.src.nature_core import NatureCore
 from engines.materials.src.materials import MaterialsEngine
+from engines.reverse_engineering.src.decomposer import Decomposer
 
 app = FastAPI(title="NEXUS Cognitive Core")
 engine = ThinkingEngine()
@@ -14,6 +15,7 @@ math_tool = MathTool()
 biz_engine = BusinessEngine()
 nature_core = NatureCore()
 materials_engine = MaterialsEngine()
+decomposer = Decomposer()
 
 NEXUS_API_KEY = os.environ.get("NEXUS_API_KEY", "")
 key_header = APIKeyHeader(name="X-NEXUS-Key", auto_error=False)
@@ -36,6 +38,8 @@ class NatureRequest(BaseModel):
 class MaterialRequest(BaseModel):
     target_material: str
     constraints: str
+class DecomposeRequest(BaseModel):
+    product: str
 
 @app.get("/")
 def read_root():
@@ -60,3 +64,7 @@ def nature(request: NatureRequest):
 @app.post("/materials", dependencies=[Depends(require_key)])
 def materials(request: MaterialRequest):
     return materials_engine.formulate(request.target_material, request.constraints)
+
+@app.post("/decompose", dependencies=[Depends(require_key)])
+def decompose(request: DecomposeRequest):
+    return decomposer.teardown(request.product)
