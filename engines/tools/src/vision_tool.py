@@ -12,7 +12,7 @@ class VisionTool:
         self.api_key = os.environ.get("GROQ_API_KEY", "")
         self.url = "https://api.groq.com/openai/v1/chat/completions"
         # Groq's stable, high-performance vision model
-        self.model = "llama-3.2-90b-vision-preview" 
+        self.model = "qwen/qwen3.6-27b" 
 
     def see(self, image_url: str, question: str):
         if not self.api_key:
