@@ -11,7 +11,7 @@ class VisionTool:
         self.api_key = os.environ.get("OPENROUTER_API_KEY", "")
         self.url = "https://openrouter.ai/api/v1/chat/completions"
         # Using a reliable, free vision model on OpenRouter
-        self.model = "google/gemini-2.0-flash-exp:free" 
+        self.model = "google/gemini-flash-1.5" 
 
     def see(self, image_url: str, question: str):
         if not self.api_key:
