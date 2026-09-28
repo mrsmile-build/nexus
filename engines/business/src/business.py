@@ -1,37 +1,46 @@
 """
-NEXUS Business Mentor Engine v0.1
-Acts as a street-smart mentor and business simulator.
+NEXUS Business Mentor Engine v0.2 (With Real-World Search)
 """
 import json
 from core.llm_client import ask, LLMError
 from engines.tools.src.math_tool import MathTool
+from engines.tools.src.search_tool import SearchTool
 
 class BusinessEngine:
     def __init__(self):
         self.math = MathTool()
+        self.search = SearchTool()
 
     def plan(self, situation: str, goal: str):
-        system = """You are a battle-tested, street-smart business mentor. You have been broke, faced real failures, and built wealth.
-You DO NOT give textbook, corporate, or generic AI advice.
-You focus on survival, cash flow, real-world prices, avoiding scams, and practical execution.
-When suggesting a business, you must consider how to pay for rent, food, and transport while scaling.
+        # 1. Gather real-world context first
+        market_context = self.search.search("low capital high margin business ideas current market", 2)
+        price_context = self.search.search("wholesale prices for small business phone accessories or cleaning supplies", 2)
+        
+        system = f"""You are a battle-tested, street-smart business mentor. 
+You DO NOT give textbook advice. You focus on survival, cash flow, and avoiding scams.
+Your prices and costs MUST be grounded in the real-world market data provided below. Do not hallucinate costs.
+
+REAL-WORLD MARKET DATA:
+---
+{market_context}
+{price_context}
+---
 
 Output ONLY a valid JSON object with these exact keys:
-{
+{{
   "reality_check": "A blunt assessment of their starting point.",
   "business_idea": "The specific, high-demand business.",
-  "unit_economics": {
+  "unit_economics": {{
     "product_or_service": "What is being sold",
     "estimated_cost_to_make_or_buy": 0,
     "realistic_selling_price": 0,
     "profit_margin_per_unit": 0
-  },
+  }},
   "survival_math": "A sympy-compatible expression calculating how many units needed to cover basic living expenses (e.g., '1000 / 25').",
-  "street_risks": ["Risk 1 (e.g., supplier scam)", "Risk 2 (e.g., dead inventory)"],
-  "first_7_days_action_plan": ["Day 1 action", "Day 2 action", "..."],
-  "the_biggest_trap": "What will cause them to fail in month 1 and how to avoid it."
-}
-Do not include markdown formatting like ```json, just the raw JSON object.
+  "street_risks": ["Risk 1", "Risk 2"],
+  "first_7_days_action_plan": ["Day 1 action", "Day 2 action"],
+  "the_biggest_trap": "What will cause them to fail in month 1."
+}}
 """
         prompt = f"Situation: {situation}\nGoal: {goal}"
         try:
@@ -48,7 +57,7 @@ Do not include markdown formatting like ```json, just the raw JSON object.
             math_check = self.math.calculate(math_expr)
             data["math_verified"] = math_check
             
-            return {"data": data, "method": "llm+math"}
+            return {"data": data, "method": "llm+math+search"}
         except json.JSONDecodeError:
             return {"raw": raw, "method": "llm", "error": "Failed to parse JSON"}
         except LLMError as e:
