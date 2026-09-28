@@ -6,12 +6,14 @@ from engines.thinking.src.thinking import ThinkingEngine
 from engines.tools.src.math_tool import MathTool
 from engines.business.src.business import BusinessEngine
 from engines.nature_core.src.nature_core import NatureCore
+from engines.materials.src.materials import MaterialsEngine
 
 app = FastAPI(title="NEXUS Cognitive Core")
 engine = ThinkingEngine()
 math_tool = MathTool()
 biz_engine = BusinessEngine()
 nature_core = NatureCore()
+materials_engine = MaterialsEngine()
 
 NEXUS_API_KEY = os.environ.get("NEXUS_API_KEY", "")
 key_header = APIKeyHeader(name="X-NEXUS-Key", auto_error=False)
@@ -23,17 +25,17 @@ def require_key(key: str = Depends(key_header)):
 
 class GoalRequest(BaseModel):
     goal: str
-
 class MathRequest(BaseModel):
     expression: str
-
 class BizRequest(BaseModel):
     situation: str
     goal: str
-
 class NatureRequest(BaseModel):
     subject: str
     tradition: str = "General"
+class MaterialRequest(BaseModel):
+    target_material: str
+    constraints: str
 
 @app.get("/")
 def read_root():
@@ -54,3 +56,7 @@ def mentor(request: BizRequest):
 @app.post("/nature", dependencies=[Depends(require_key)])
 def nature(request: NatureRequest):
     return nature_core.investigate(request.subject, request.tradition)
+
+@app.post("/materials", dependencies=[Depends(require_key)])
+def materials(request: MaterialRequest):
+    return materials_engine.formulate(request.target_material, request.constraints)
