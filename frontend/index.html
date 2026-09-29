@@ -122,7 +122,7 @@ async function send(){
   t.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
   document.getElementById('chat').appendChild(t);
   try {
-    const res = await fetch(API + '/chat', { method: 'POST', headers: {'Content-Type':'application/json','X-NEXUS-Key':key}, body: JSON.stringify({message: msg || "Describe this image.", image_url: pendingImage}) });
+    const res = await fetch(API + '/chat', { method: 'POST', headers: {'Content-Type':'application/json','X-NEXUS-Key':key}, body: JSON.stringify({message: msg || "Describe this image.", image_url: pendingImage, history: active().msgs.slice(-5, -1).map(m => ({role: m.cls === 'user' ? 'User' : 'NEXUS', text: m.text.slice(0, 400)}))}) });
     const data = await res.json();
     document.querySelector('.typing-msg').remove();
     if (res.status === 401) addMsg('🔒 Access Denied. Tap 🔑 to re-enter your key.', 'ai', 'System');
