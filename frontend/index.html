@@ -39,6 +39,7 @@
     <div id="input-area" style="display:none;">
         <input type="text" id="msg" placeholder="Ask NEXUS anything..." onkeypress="if(event.key==='Enter')send()">
         <button onclick="send()">Send</button>
+        <button onclick="resetKey()" title="Change API key" style="background:#333;padding:0 14px;">🔑</button>
     </div>
     <script src="config.js"></script>
     <script>
@@ -87,6 +88,8 @@
             document.getElementById('chat').appendChild(div);
             document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
         }
+        
+        function resetKey() { localStorage.removeItem('nexus_key'); location.reload(); }
         
         async function send() {
             const msg = document.getElementById('msg').value.trim();
