@@ -50,17 +50,22 @@ button { background: none; border: none; color: inherit; cursor: pointer; font: 
 #drawer.open { transform: none; }
 .d-brand { font-weight: 800; letter-spacing: 3px; font-size: 18px; padding: 4px 8px 14px; }
 #chat-search { background: #17171d; border: 1px solid #2a2a33; border-radius: 12px; color: #fff; padding: 10px 14px; outline: none; margin-bottom: 12px; }
-.new-chat { display: flex; align-items: center; gap: 10px; background: #1a1a22; border: 1px solid #2a2a33; border-radius: 14px; padding: 13px 14px; font-weight: 600; margin-bottom: 14px; width: 100%; text-align: left; }
 #drawer h3 { color: #6d7185; font-size: 11px; letter-spacing: 2px; margin: 10px 8px 6px; }
 #session-list { flex: 1; overflow-y: auto; }
 .s-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; margin-bottom: 2px; font-size: 14px; color: #cfd3e4; }
 .s-row.active { background: #1d2337; color: #fff; }
-.s-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%; }
-.s-del { color: #6d7185; padding: 4px 8px; }
+.s-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 78%; }
+.s-menu { color: #6d7185; padding: 4px 10px; font-size: 16px; }
 .nav-item { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 12px; font-size: 14px; color: #cfd3e4; }
 .nav-item:active { background: #1a1a22; }
-#drawer footer { border-top: 1px solid #23232d; padding: 12px 8px 0; display: flex; align-items: center; gap: 10px; }
+#drawer footer { border-top: 1px solid #23232d; padding: 12px 4px 0; display: flex; align-items: center; gap: 10px; }
 .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#3d6bff,#7a5cff); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.newchat-pill { background: #e8e8f0; color: #0a0a0f; border-radius: 22px; padding: 10px 16px; font-weight: 700; font-size: 14px; }
+#menu-modal { position: fixed; left: 50%; bottom: 100px; transform: translateX(-50%) scale(.95); background: #1d2337; border: 1px solid #2a2a33; border-radius: 16px; z-index: 99; display: none; flex-direction: column; min-width: 220px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+#menu-modal.open { display: flex; transform: translateX(-50%) scale(1); }
+#menu-modal button { padding: 15px 20px; text-align: left; font-size: 14.5px; border-bottom: 1px solid #23232d; display: flex; justify-content: space-between; }
+#menu-modal button:last-child { border-bottom: none; }
+#menu-modal button:active { background: #232c47; }
 .toast { position: fixed; left: 50%; bottom: 110px; transform: translateX(-50%); background: #1d2337; border: 1px solid #2a2a33; color: #e8e8f0; padding: 10px 18px; border-radius: 20px; font-size: 13px; z-index: 99; animation: fadein .2s; max-width: 85%; text-align: center; }
 </style>
 </head>
@@ -101,8 +106,6 @@ button { background: none; border: none; color: inherit; cursor: pointer; font: 
 <aside id="drawer">
   <div class="d-brand">NEXUS</div>
   <input id="chat-search" placeholder="Search chats" oninput="renderSessions(this.value)">
-  <button class="new-chat" onclick="newChat(); closeDrawer();"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> New Chat</button>
-  <h3>CHATS</h3>
   <div id="session-list"></div>
   <h3>TOOLS</h3>
   <div class="nav-item" onclick="toast('⏰ Scheduled tasks land in Phase E — the next build.')">🕒 Scheduled</div>
@@ -111,8 +114,14 @@ button { background: none; border: none; color: inherit; cursor: pointer; font: 
     <div class="avatar">A</div>
     <div style="flex:1"><div style="font-size:14px;font-weight:600">Admin</div><div style="font-size:11px;color:#6d7185">Unlimited · all engines</div></div>
     <button onclick="resetKey()" style="font-size:16px">🔑</button>
+    <button class="newchat-pill" onclick="newChat(); closeDrawer();">+ New chat</button>
   </footer>
 </aside>
+<div id="menu-modal">
+  <button onclick="menuRename()"><span>✏️ Rename</span></button>
+  <button onclick="menuStar()"><span>⭐ Star / Unstar</span></button>
+  <button onclick="menuDelete()" style="color:#ff6b6b"><span>🗑 Delete</span></button>
+</div>
 <script src="config.js"></script>
 <script>
 const API = window.NEXUS_API_URL || window.location.origin;
@@ -120,6 +129,7 @@ const urlKey = new URLSearchParams(window.location.search).get('key');
 if (urlKey) { localStorage.setItem('nexus_key', urlKey); history.replaceState(null, '', window.location.pathname); }
 let key = localStorage.getItem('nexus_key');
 let pendingImage = "";
+let menuFor = null;
 let sessions = JSON.parse(localStorage.getItem('nexus_sessions_v1') || '[]');
 let activeId = localStorage.getItem('nexus_active_v1');
 if (!sessions.length) { sessions.push({id: String(Date.now()), title: 'New Chat', msgs: []}); activeId = sessions[0].id; }
@@ -145,6 +155,12 @@ function copyText(t){
 }
 function fallbackCopy(t, done){ const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); done(); }
 
+function openMenu(id, ev){ ev.stopPropagation(); menuFor = id; document.getElementById('menu-modal').classList.add('open'); }
+function closeMenu(){ document.getElementById('menu-modal').classList.remove('open'); }
+function menuRename(){ const s = sessions.find(x => x.id === menuFor); const t = prompt('Rename chat:', s.title); if (t && t.trim()) { s.title = t.trim(); saveSessions(); renderSessions(document.getElementById('chat-search').value); } closeMenu(); }
+function menuStar(){ const s = sessions.find(x => x.id === menuFor); s.star = !s.star; saveSessions(); renderSessions(document.getElementById('chat-search').value); toast(s.star ? '⭐ Starred' : '☆ Unstarred'); closeMenu(); }
+function menuDelete(){ if (confirm('Delete this chat?')) { sessions = sessions.filter(x => x.id !== menuFor); if (!sessions.length) sessions.push({id: String(Date.now()), title: 'New Chat', msgs: []}); if (activeId === menuFor) activeId = sessions[0].id; saveSessions(); renderSessions(''); renderChat(); } closeMenu(); }
+
 let rec = null, recognizing = false;
 function toggleMic(){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -157,20 +173,24 @@ function toggleMic(){
   rec.start(); recognizing = true; document.getElementById('micbtn').classList.add('live');
 }
 
+function makeRow(s){
+  const row = document.createElement('div');
+  row.className = 's-row' + (s.id === activeId ? ' active' : '');
+  row.onclick = () => { activeId = s.id; saveSessions(); renderSessions(''); renderChat(); closeDrawer(); };
+  const t = document.createElement('span'); t.className = 's-title'; t.textContent = (s.star ? '⭐ ' : '') + s.title;
+  const m = document.createElement('button'); m.className = 's-menu'; m.textContent = '⋯';
+  m.onclick = e => openMenu(s.id, e);
+  row.appendChild(t); row.appendChild(m);
+  return row;
+}
 function renderSessions(filter){
   const q = (filter || '').toLowerCase();
   const list = document.getElementById('session-list');
   list.innerHTML = '';
-  sessions.filter(s => s.title.toLowerCase().includes(q)).forEach(s => {
-    const row = document.createElement('div');
-    row.className = 's-row' + (s.id === activeId ? ' active' : '');
-    row.onclick = () => { activeId = s.id; saveSessions(); renderSessions(''); renderChat(); closeDrawer(); };
-    const t = document.createElement('span'); t.className = 's-title'; t.textContent = s.title;
-    const del = document.createElement('button'); del.className = 's-del'; del.textContent = '✕';
-    del.onclick = e => { e.stopPropagation(); if (confirm('Delete this chat?')) { sessions = sessions.filter(x => x.id !== s.id); if (!sessions.length) sessions.push({id: String(Date.now()), title: 'New Chat', msgs: []}); if (activeId === s.id) activeId = sessions[0].id; saveSessions(); renderSessions(''); renderChat(); } };
-    row.appendChild(t); row.appendChild(del);
-    list.appendChild(row);
-  });
+  const match = sessions.filter(s => s.title.toLowerCase().includes(q));
+  const starred = match.filter(s => s.star), rest = match.filter(s => !s.star);
+  if (starred.length){ const h = document.createElement('h3'); h.textContent = 'STARRED'; list.appendChild(h); starred.forEach(s => list.appendChild(makeRow(s))); }
+  if (rest.length){ const h = document.createElement('h3'); h.textContent = 'RECENTS'; list.appendChild(h); rest.forEach(s => list.appendChild(makeRow(s))); }
 }
 
 function paint(text, cls, meta, ts){
@@ -268,7 +288,7 @@ async function sendText(msg, img, attempt){
       return sendText(msg, img, 1);
     }
     t.remove();
-    addMsg('⚠️ Network error: ' + e.message + ' (tap ↻ Retry on this message later, or check connection)', 'ai', 'System');
+    addMsg('⚠️ Network error: ' + e.message, 'ai', 'System');
   }
 }
 boot();
