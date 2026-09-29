@@ -1,123 +1,106 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS Cognitive Core</title>
-    <style>
-        * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #eee; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
-        .msg { margin: 8px 0; padding: 12px 16px; border-radius: 18px; max-width: 85%; line-height: 1.5; font-size: 16px; word-wrap: break-word; white-space: pre-wrap; }
-        .user { background: #2a52be; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .ai { background: #222; border: 1px solid #333; align-self: flex-start; border-bottom-left-radius: 4px; }
-        .meta { font-size: 0.7em; color: #888; margin-top: 6px; font-style: italic; }
-        #input-area { display: flex; padding: 15px; background: #181818; border-top: 1px solid #333; }
-        #input-area input { flex: 1; padding: 12px; background: #2a2a2a; color: white; border: 1px solid #444; border-radius: 20px; font-size: 16px; outline: none; }
-        #input-area input:focus { border-color: #2a52be; }
-        #input-area button { padding: 0 20px; background: #2a52be; color: white; border: none; border-radius: 20px; margin-left: 10px; font-weight: bold; cursor: pointer; }
-        #setup { padding: 40px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
-        #setup h2 { color: #2a52be; margin-bottom: 10px; }
-        #setup p { color: #888; margin-bottom: 20px; max-width: 400px; }
-        #setup input { flex: none; height: 50px; width: 320px; max-width: 90%; padding: 0 15px; margin-bottom: 15px; background: #2a2a2a; color: white; border: 1px solid #444; border-radius: 20px; text-align: center; font-size: 16px; }
-        #setup button { padding: 12px 30px; background: #2a52be; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        .typing { display: flex; gap: 5px; padding: 15px; }
-        .typing span { width: 8px; height: 8px; background: #666; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
-        .typing span:nth-child(1) { animation-delay: -0.32s; }
-        .typing span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS Cognitive Core</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #eee; margin: 0; height: 100vh; display: flex; flex-direction: column; }
+#topbar { display: flex; gap: 8px; padding: 10px 12px; background: #181818; border-bottom: 1px solid #333; }
+#topbar select { flex: 1; background: #2a2a2a; color: #eee; border: 1px solid #444; border-radius: 8px; padding: 8px; font-size: 14px; }
+#topbar button { background: #2a52be; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-weight: bold; }
+#chat { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; }
+.msg { margin: 6px 0; padding: 12px 16px; border-radius: 18px; max-width: 88%; line-height: 1.5; font-size: 15px; word-wrap: break-word; white-space: pre-wrap; }
+.user { background: #2a52be; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+.ai { background: #222; border: 1px solid #333; align-self: flex-start; border-bottom-left-radius: 4px; }
+.meta { font-size: 0.7em; color: #888; margin-top: 6px; font-style: italic; }
+#input-area { display: flex; padding: 12px; background: #181818; border-top: 1px solid #333; gap: 8px; }
+#input-area input { flex: 1; padding: 12px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 20px; font-size: 16px; outline: none; }
+#input-area button { background: #2a52be; color: #fff; border: none; border-radius: 20px; padding: 0 18px; font-weight: bold; }
+#keybtn { background: #333 !important; }
+#setup { padding: 40px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
+#setup h2 { color: #2a52be; }
+#setup input { flex: none; height: 50px; width: 320px; max-width: 90%; padding: 0 15px; margin: 15px 0; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 20px; text-align: center; }
+#setup button { padding: 12px 30px; background: #2a52be; color: #fff; border: none; border-radius: 20px; font-weight: bold; }
+.typing { display: flex; gap: 5px; padding: 15px; }
+.typing span { width: 8px; height: 8px; background: #666; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+.typing span:nth-child(1) { animation-delay: -0.32s; }
+.typing span:nth-child(2) { animation-delay: -0.16s; }
+@keyframes bounce { 0%,80%,100% { transform: scale(0);} 40% { transform: scale(1);} }
+</style>
 </head>
 <body>
-    <div id="setup" style="display:none;">
-        <h2>🔒 NEXUS Secure Access</h2>
-        <p>Enter your X-NEXUS-Key to unlock the Grandpa AI. Your key is saved in this browser and never sent anywhere except the NEXUS server.</p>
-        <input type="password" id="key-input" placeholder="Paste your API key here">
-        <button onclick="saveKey()">Unlock Brain</button>
-    </div>
-    <div id="chat" style="display:none;"></div>
-    <div id="input-area" style="display:none;">
-        <input type="text" id="msg" placeholder="Ask NEXUS anything..." onkeypress="if(event.key==='Enter')send()">
-        <button onclick="send()">Send</button>
-        <button onclick="resetKey()" title="Change API key" style="background:#333;padding:0 14px;">🔑</button>
-    </div>
-    <script src="config.js"></script>
-    <script>
-        // API URL: set via window.NEXUS_API_URL in config.js, or fallback to this page's origin
-        const API = window.NEXUS_API_URL || window.location.origin;
-        
-        const urlKey = new URLSearchParams(window.location.search).get('key');
-        if (urlKey) { localStorage.setItem('nexus_key', urlKey); history.replaceState(null, '', window.location.pathname); }
-        let key = localStorage.getItem('nexus_key');
-        
-        if (!key) {
-            document.getElementById('setup').style.display = 'flex';
-        } else {
-            document.getElementById('chat').style.display = 'flex';
-            document.getElementById('input-area').style.display = 'flex';
-        }
-        
-        function saveKey() {
-            key = document.getElementById('key-input').value.trim();
-            if (!key) return;
-            localStorage.setItem('nexus_key', key);
-            document.getElementById('setup').style.display = 'none';
-            document.getElementById('chat').style.display = 'flex';
-            document.getElementById('input-area').style.display = 'flex';
-        }
-        
-        function addMsg(text, cls, meta="") {
-            const div = document.createElement('div');
-            div.className = 'msg ' + cls;
-            div.textContent = text;
-            if (meta) {
-                const m = document.createElement('div');
-                m.className = 'meta';
-                m.textContent = meta;
-                div.appendChild(m);
-            }
-            document.getElementById('chat').appendChild(div);
-            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-            return div;
-        }
-        
-        function addTyping() {
-            const div = document.createElement('div');
-            div.className = 'msg ai typing-msg';
-            div.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
-            document.getElementById('chat').appendChild(div);
-            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-        }
-        
-        function resetKey() { localStorage.removeItem('nexus_key'); location.reload(); }
-        
-        async function send() {
-            const msg = document.getElementById('msg').value.trim();
-            if (!msg) return;
-            addMsg(msg, 'user');
-            document.getElementById('msg').value = '';
-            addTyping();
-            
-            try {
-                const res = await fetch(API + '/chat', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json', 'X-NEXUS-Key': key},
-                    body: JSON.stringify({message: msg})
-                });
-                const data = await res.json();
-                document.querySelector('.typing-msg').remove();
-                if (res.status === 401) {
-                    addMsg("🔒 Access Denied. Your key is invalid. Check it and try again.", 'ai', 'System');
-                } else if (res.status === 429) {
-                    addMsg("⏱️ Rate limit reached. Please wait 60 seconds.", 'ai', 'System');
-                } else {
-                    addMsg(data.response || "No response.", 'ai', `Engine: ${data.engine || 'core'}`);
-                }
-            } catch (e) {
-                document.querySelector('.typing-msg').remove();
-                addMsg('⚠️ Network Error: ' + e.message, 'ai');
-            }
-        }
-    </script>
+<div id="setup" style="display:none;">
+  <h2>🔒 NEXUS Secure Access</h2>
+  <p style="color:#888;">Enter your X-NEXUS-Key once. It stays in this browser.</p>
+  <input type="password" id="key-input" placeholder="Paste your API key here">
+  <button onclick="saveKey()">Unlock Brain</button>
+</div>
+<div id="app" style="display:none;">
+  <div id="topbar">
+    <select id="session-select" onchange="switchSession(this.value)"></select>
+    <button onclick="newChat()">+ New</button>
+  </div>
+  <div id="chat"></div>
+  <div id="input-area">
+    <input type="text" id="msg" placeholder="Ask NEXUS anything..." onkeypress="if(event.key==='Enter')send()">
+    <button onclick="send()">Send</button>
+    <button id="keybtn" onclick="resetKey()">🔑</button>
+  </div>
+</div>
+<script src="config.js"></script>
+<script>
+const API = window.NEXUS_API_URL || window.location.origin;
+const urlKey = new URLSearchParams(window.location.search).get('key');
+if (urlKey) { localStorage.setItem('nexus_key', urlKey); history.replaceState(null, '', window.location.pathname); }
+let key = localStorage.getItem('nexus_key');
+
+let sessions = JSON.parse(localStorage.getItem('nexus_sessions_v1') || '[]');
+let activeId = localStorage.getItem('nexus_active_v1');
+if (!sessions.length) { sessions.push({id: String(Date.now()), title: 'Chat 1', msgs: []}); activeId = sessions[0].id; }
+if (!sessions.find(s => s.id === activeId)) activeId = sessions[0].id;
+
+function saveSessions(){ localStorage.setItem('nexus_sessions_v1', JSON.stringify(sessions)); localStorage.setItem('nexus_active_v1', activeId); }
+function active(){ return sessions.find(s => s.id === activeId); }
+function renderSessions(){ const sel = document.getElementById('session-select'); sel.innerHTML = ''; sessions.forEach(s => { const o = document.createElement('option'); o.value = s.id; o.textContent = s.title; if (s.id === activeId) o.selected = true; sel.appendChild(o); }); }
+function renderChat(){ document.getElementById('chat').innerHTML = ''; active().msgs.forEach(m => paint(m.text, m.cls, m.meta)); }
+function paint(text, cls, meta){ const d = document.createElement('div'); d.className = 'msg ' + cls; d.textContent = text; if (meta){ const m = document.createElement('div'); m.className = 'meta'; m.textContent = meta; d.appendChild(m);} document.getElementById('chat').appendChild(d); document.getElementById('chat').scrollTop = 1e6; }
+function addMsg(text, cls, meta){ paint(text, cls, meta); active().msgs.push({text, cls, meta}); if (cls === 'user' && active().msgs.length === 1) active().title = text.slice(0, 28); saveSessions(); renderSessions(); }
+function newChat(){ sessions.unshift({id: String(Date.now()), title: 'New Chat', msgs: []}); activeId = sessions[0].id; saveSessions(); renderSessions(); renderChat(); }
+function switchSession(id){ activeId = id; saveSessions(); renderChat(); }
+function resetKey(){ localStorage.removeItem('nexus_key'); location.reload(); }
+
+function boot(){
+  if (!key) { document.getElementById('setup').style.display = 'flex'; return; }
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.flexDirection = 'column';
+  document.getElementById('app').style.height = '100vh';
+  renderSessions(); renderChat();
+}
+function saveKey(){ key = document.getElementById('key-input').value.trim(); if (!key) return; localStorage.setItem('nexus_key', key); document.getElementById('setup').style.display = 'none'; boot(); }
+
+async function send(){
+  const msg = document.getElementById('msg').value.trim();
+  if (!msg) return;
+  addMsg(msg, 'user');
+  document.getElementById('msg').value = '';
+  const t = document.createElement('div'); t.className = 'msg ai typing-msg';
+  t.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  document.getElementById('chat').appendChild(t);
+  try {
+    const res = await fetch(API + '/chat', { method: 'POST', headers: {'Content-Type':'application/json','X-NEXUS-Key':key}, body: JSON.stringify({message: msg}) });
+    const data = await res.json();
+    document.querySelector('.typing-msg').remove();
+    if (res.status === 401) addMsg('🔒 Access Denied. Tap 🔑 to re-enter your key.', 'ai', 'System');
+    else if (res.status === 429) addMsg('⏱️ Rate limit. Wait 60s.', 'ai', 'System');
+    else addMsg(data.response || 'No response.', 'ai', 'Engine: ' + (data.engine || 'core'));
+  } catch(e){
+    const tm = document.querySelector('.typing-msg'); if (tm) tm.remove();
+    addMsg('⚠️ Network Error: ' + e.message, 'ai');
+  }
+}
+boot();
+</script>
 </body>
 </html>

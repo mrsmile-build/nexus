@@ -135,16 +135,19 @@ def chat(request: ChatRequest):
         vision_result = vision_tool.see(request.image_url, request.message)
         return {"response": vision_result.get("analysis", "I couldn't see the image."), "engine": "vision"}
     
-    # Smart Routing
-    router_prompt = """You are a routing AI. Based on the user's message, output ONLY ONE of these exact words:
-    MATH, BUSINESS, NATURE, MATERIALS, DECOMPOSE, GROW, THINK.
-    User Message: """ + request.message
-    
+    # Smart Routing (robust containment parsing)
+    router_prompt = """You are a routing AI. Choose the single best engine.
+MATH=calculations. BUSINESS=money/startups/pricing/profit/selling/broke. NATURE=plants/herbs/medicine/charms. MATERIALS=cement/alloys/chemicals/manufacturing/formulations. DECOMPOSE=teardowns/how-made/supply-chain. GROW=farming/soil/crops. THINK=everything else.
+Reply with ONLY the engine word.
+User Message: """ + request.message
     try:
-        route = ask(router_prompt, max_tokens=10).strip().upper()
-        if route not in ["MATH", "BUSINESS", "NATURE", "MATERIALS", "DECOMPOSE", "GROW", "THINK"]:
-            route = "THINK"
-    except:
+        raw_route = ask(router_prompt, max_tokens=12).strip().upper()
+        route = "THINK"
+        for cand in ["MATERIALS", "DECOMPOSE", "BUSINESS", "NATURE", "MATH", "GROW", "THINK"]:
+            if cand in raw_route:
+                route = cand
+                break
+    except Exception:
         route = "THINK"
     
     # Execute Engine
