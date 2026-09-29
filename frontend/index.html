@@ -9,38 +9,34 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0a0a0f; color: #e8e8f0; margin: 0; height: 100vh; display: flex; flex-direction: column; }
 button { background: none; border: none; color: inherit; cursor: pointer; font: inherit; }
-
 #setup { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
 #setup h2 { color: #6f9bff; letter-spacing: 3px; }
 #setup input { height: 52px; width: 320px; max-width: 90%; padding: 0 16px; margin: 18px 0; background: #17171d; color: #fff; border: 1px solid #2a2a33; border-radius: 26px; text-align: center; outline: none; }
 #setup button { padding: 13px 34px; background: linear-gradient(135deg,#3d6bff,#7a5cff); border-radius: 26px; font-weight: 700; }
-
 #app { display: none; flex: 1; flex-direction: column; height: 100vh; max-width: 820px; width: 100%; margin: 0 auto; }
 #topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; }
 .icon-btn { padding: 9px; border-radius: 12px; color: #cfd3e4; display: flex; }
 .icon-btn:active { background: #1a1a22; }
-
 #empty { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px; text-align: center; }
 #empty h1 { font-size: 21px; font-weight: 700; margin: 0; }
 #empty p { color: #8b8fa3; font-size: 13px; margin: 0; max-width: 300px; }
-
 #chat { flex: 1; overflow-y: auto; padding: 8px 14px 14px; display: flex; flex-direction: column; }
 .msg { margin: 6px 0; padding: 12px 16px; border-radius: 20px; max-width: 88%; line-height: 1.55; font-size: 15px; word-wrap: break-word; white-space: pre-wrap; animation: fadein .25s ease; }
 @keyframes fadein { from {opacity:0; transform: translateY(6px);} to {opacity:1;} }
 .user { background: linear-gradient(135deg,#2b4fd8,#4f7cff); color: #fff; align-self: flex-end; border-bottom-right-radius: 6px; }
 .ai { background: #141419; border: 1px solid #23232d; align-self: flex-start; border-bottom-left-radius: 6px; }
+.msg strong { color: #cfe0ff; }
 .meta { font-size: .68em; color: #6d7185; margin-top: 8px; font-style: italic; }
+.actions { display: flex; gap: 2px; margin-top: 6px; opacity: .6; }
+.act { padding: 4px 9px; border-radius: 8px; font-size: 13px; color: #9aa0b5; }
+.act:active { background: #1a1a22; }
 .typing { display: flex; gap: 5px; padding: 6px 2px; }
 .typing span { width: 8px; height: 8px; background: #666; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
 .typing span:nth-child(1){animation-delay:-.32s}.typing span:nth-child(2){animation-delay:-.16s}
 @keyframes bounce {0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
-
 #chips { display: flex; gap: 8px; padding: 4px 14px 8px; overflow-x: auto; scrollbar-width: none; justify-content: center; flex-wrap: wrap; }
-#chips::-webkit-scrollbar { display: none; }
 .chip { flex: none; background: #141419; border: 1px solid #262631; border-radius: 16px; padding: 9px 14px; font-size: 13px; color: #dfe3f4; }
-
 #imgchip { display: none; margin: 0 14px 8px; background: #12241a; border: 1px solid #1f4030; color: #9fe8c0; border-radius: 12px; padding: 7px 12px; font-size: 13px; align-items: center; gap: 10px; }
-
 #inputbar { display: flex; align-items: center; gap: 4px; margin: 0 14px calc(14px + env(safe-area-inset-bottom)); background: #17171d; border: 1px solid #262631; border-radius: 30px; padding: 6px 8px 6px 6px; }
 #msg { flex: 1; background: none; border: none; outline: none; color: #fff; font-size: 15.5px; padding: 10px 6px; }
 #msg::placeholder { color: #6d7185; }
@@ -48,7 +44,6 @@ button { background: none; border: none; color: inherit; cursor: pointer; font: 
 .pill-btn.live { color: #ff5c5c; animation: pulse 1s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 #sendbtn { background: #e8e8f0; color: #0a0a0f; border-radius: 50%; padding: 10px; display: flex; }
-
 #backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 40; }
 #backdrop.open { opacity: 1; pointer-events: auto; }
 #drawer { position: fixed; top: 0; left: 0; bottom: 0; width: 82%; max-width: 320px; background: #101016; border-right: 1px solid #23232d; transform: translateX(-100%); transition: transform .25s ease; z-index: 50; display: flex; flex-direction: column; padding: 16px 12px; }
@@ -66,42 +61,34 @@ button { background: none; border: none; color: inherit; cursor: pointer; font: 
 .nav-item:active { background: #1a1a22; }
 #drawer footer { border-top: 1px solid #23232d; padding: 12px 8px 0; display: flex; align-items: center; gap: 10px; }
 .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#3d6bff,#7a5cff); display: flex; align-items: center; justify-content: center; font-weight: 700; }
-
 .toast { position: fixed; left: 50%; bottom: 110px; transform: translateX(-50%); background: #1d2337; border: 1px solid #2a2a33; color: #e8e8f0; padding: 10px 18px; border-radius: 20px; font-size: 13px; z-index: 99; animation: fadein .2s; max-width: 85%; text-align: center; }
 </style>
 </head>
 <body>
-
 <div id="setup">
   <h2>NEXUS</h2>
   <p style="color:#8b8fa3;">Enter your X-NEXUS-Key once. It stays on this device.</p>
   <input type="password" id="key-input" placeholder="Paste your API key">
   <button onclick="saveKey()">Unlock Brain</button>
 </div>
-
 <div id="app">
   <div id="topbar">
     <button class="icon-btn" onclick="openDrawer()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
     <button class="icon-btn" onclick="newChat()"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
   </div>
-
   <div id="empty">
     <svg width="72" height="72" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d6bff"/><stop offset="1" stop-color="#7a5cff"/></linearGradient></defs><circle cx="50" cy="26" r="12" fill="url(#g)"/><circle cx="26" cy="66" r="12" fill="url(#g)"/><circle cx="74" cy="66" r="12" fill="url(#g)"/><path d="M50 26L26 66M50 26l24 40M26 66h48" stroke="url(#g)" stroke-width="6"/></svg>
     <h1>How can NEXUS help you today?</h1>
     <p>Street-smart intelligence for business, nature, materials, farming & vision.</p>
   </div>
-
   <div id="chat"></div>
-
   <div id="chips">
     <button class="chip" onclick="useChip('I am a broke guy in Nigeria. Score 10 proven production businesses I can start today.')">💼 Business</button>
     <button class="chip" onclick="useChip('Is this plant or remedy safe, and what is it traditionally used for? ')">🌿 Nature</button>
     <button class="chip" onclick="useChip('How do I manufacture this product cheaper with local materials? ')">🏭 Materials</button>
     <button class="chip" onclick="useChip('My soil is poor. What exactly do I add to grow bigger harvests?')">🌱 Grow</button>
   </div>
-
   <div id="imgchip">🖼 Image attached <button onclick="clearImage()" style="color:#9fe8c0;font-weight:700;">✕</button></div>
-
   <div id="inputbar">
     <button class="pill-btn" onclick="document.getElementById('img').click()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
     <input type="file" id="img" accept="image/*" style="display:none" onchange="pickImage(this)">
@@ -110,7 +97,6 @@ button { background: none; border: none; color: inherit; cursor: pointer; font: 
     <button id="sendbtn" onclick="send()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
   </div>
 </div>
-
 <div id="backdrop" onclick="closeDrawer()"></div>
 <aside id="drawer">
   <div class="d-brand">NEXUS</div>
@@ -127,7 +113,6 @@ button { background: none; border: none; color: inherit; cursor: pointer; font: 
     <button onclick="resetKey()" style="font-size:16px">🔑</button>
   </footer>
 </aside>
-
 <script src="config.js"></script>
 <script>
 const API = window.NEXUS_API_URL || window.location.origin;
@@ -135,7 +120,6 @@ const urlKey = new URLSearchParams(window.location.search).get('key');
 if (urlKey) { localStorage.setItem('nexus_key', urlKey); history.replaceState(null, '', window.location.pathname); }
 let key = localStorage.getItem('nexus_key');
 let pendingImage = "";
-
 let sessions = JSON.parse(localStorage.getItem('nexus_sessions_v1') || '[]');
 let activeId = localStorage.getItem('nexus_active_v1');
 if (!sessions.length) { sessions.push({id: String(Date.now()), title: 'New Chat', msgs: []}); activeId = sessions[0].id; }
@@ -148,11 +132,23 @@ function closeDrawer(){ document.getElementById('drawer').classList.remove('open
 function resetKey(){ localStorage.removeItem('nexus_key'); location.reload(); }
 function useChip(t){ document.getElementById('msg').value = t; document.getElementById('msg').focus(); }
 function toast(t){ const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2800); }
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+function fmt(t){
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^#{1,3} (.*)$/gm,'<strong>$1</strong>');
+}
+function copyText(t){
+  const done = () => toast('📋 Copied');
+  if (navigator.clipboard) navigator.clipboard.writeText(t).then(done).catch(() => fallbackCopy(t, done));
+  else fallbackCopy(t, done);
+}
+function fallbackCopy(t, done){ const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); done(); }
 
 let rec = null, recognizing = false;
 function toggleMic(){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { toast('Voice input not supported in this browser'); return; }
+  if (!SR) { toast('Voice input not supported here'); return; }
   if (recognizing) { rec.stop(); return; }
   rec = new SR(); rec.lang = 'en-US';
   rec.onresult = e => { document.getElementById('msg').value = e.results[0][0].transcript; };
@@ -177,9 +173,16 @@ function renderSessions(filter){
   });
 }
 
-function paint(text, cls, meta){
-  const d = document.createElement('div'); d.className = 'msg ' + cls; d.textContent = text;
-  if (meta){ const m = document.createElement('div'); m.className = 'meta'; m.textContent = meta; d.appendChild(m); }
+function paint(text, cls, meta, ts){
+  const d = document.createElement('div'); d.className = 'msg ' + cls;
+  const c = document.createElement('div'); c.innerHTML = fmt(text); d.appendChild(c);
+  const m = document.createElement('div'); m.className = 'meta';
+  m.textContent = (meta ? meta + ' · ' : '') + (ts || '');
+  d.appendChild(m);
+  const a = document.createElement('div'); a.className = 'actions';
+  const cp = document.createElement('button'); cp.className = 'act'; cp.textContent = '⧉ Copy'; cp.onclick = () => copyText(text); a.appendChild(cp);
+  if (cls === 'ai') { const rt = document.createElement('button'); rt.className = 'act'; rt.textContent = '↻ Retry'; rt.onclick = retryLast; a.appendChild(rt); }
+  d.appendChild(a);
   document.getElementById('chat').appendChild(d);
   document.getElementById('chat').scrollTop = 1e6;
 }
@@ -188,14 +191,25 @@ function syncView(){
   document.getElementById('empty').style.display = has ? 'none' : 'flex';
   document.getElementById('chips').style.display = has ? 'none' : 'flex';
 }
-function renderChat(){ document.getElementById('chat').innerHTML = ''; syncView(); active().msgs.forEach(m => paint(m.text, m.cls, m.meta)); }
+function renderChat(){ document.getElementById('chat').innerHTML = ''; syncView(); active().msgs.forEach(m => paint(m.text, m.cls, m.meta, m.ts)); }
 function addMsg(text, cls, meta){
-  paint(text, cls, meta); syncView();
-  active().msgs.push({text, cls, meta});
+  const ts = new Date().toTimeString().slice(0,5);
+  paint(text, cls, meta, ts); syncView();
+  active().msgs.push({text, cls, meta, ts});
   if (cls === 'user' && active().title === 'New Chat') active().title = text.slice(0, 30);
   saveSessions(); renderSessions(document.getElementById('chat-search').value);
 }
 function newChat(){ sessions.unshift({id: String(Date.now()), title: 'New Chat', msgs: []}); activeId = sessions[0].id; saveSessions(); renderSessions(''); renderChat(); }
+
+function retryLast(){
+  const msgs = active().msgs;
+  while (msgs.length && msgs[msgs.length-1].cls === 'ai') msgs.pop();
+  const lastUser = [...msgs].reverse().find(m => m.cls === 'user');
+  if (!lastUser) { toast('Nothing to retry'); return; }
+  saveSessions(); renderChat();
+  toast('↻ Regenerating…');
+  sendText(lastUser.text, '');
+}
 
 function pickImage(el){
   const f = el.files[0]; if (!f) return;
@@ -223,26 +237,39 @@ function boot(){
 }
 function saveKey(){ key = document.getElementById('key-input').value.trim(); if (!key) return; localStorage.setItem('nexus_key', key); document.getElementById('setup').style.display = 'none'; boot(); }
 
-async function send(){
+function send(){
   const msg = document.getElementById('msg').value.trim();
   if (!msg && !pendingImage) return;
+  const img = pendingImage;
   addMsg(msg || '[Image]', 'user');
   document.getElementById('msg').value = '';
+  clearImage();
+  sendText(msg || "Describe this image.", img);
+}
+
+async function sendText(msg, img, attempt){
+  attempt = attempt || 0;
   const t = document.createElement('div'); t.className = 'msg ai typing-msg';
   t.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
   document.getElementById('chat').appendChild(t);
+  document.getElementById('chat').scrollTop = 1e6;
   try {
-    const res = await fetch(API + '/chat', { method: 'POST', headers: {'Content-Type':'application/json','X-NEXUS-Key':key}, body: JSON.stringify({message: msg || "Describe this image.", image_url: pendingImage, history: active().msgs.slice(-5, -1).map(m => ({role: m.cls === 'user' ? 'User' : 'NEXUS', text: m.text.slice(0, 400)}))}) });
+    const res = await fetch(API + '/chat', { method: 'POST', headers: {'Content-Type':'application/json','X-NEXUS-Key':key}, body: JSON.stringify({message: msg, image_url: img, history: active().msgs.slice(-5, -1).map(m => ({role: m.cls === 'user' ? 'User' : 'NEXUS', text: m.text.slice(0, 400)}))}) });
     const data = await res.json();
-    document.querySelector('.typing-msg').remove();
+    t.remove();
     if (res.status === 401) addMsg('🔒 Access denied. Menu → 🔑 to re-enter key.', 'ai', 'System');
     else if (res.status === 429) addMsg('⏱️ Rate limit reached. Wait 60 seconds.', 'ai', 'System');
     else addMsg(data.response || 'No response.', 'ai', 'Engine: ' + (data.engine || 'core'));
   } catch(e){
-    const tm = document.querySelector('.typing-msg'); if (tm) tm.remove();
-    addMsg('⚠️ Network error: ' + e.message, 'ai');
+    if (attempt === 0) {
+      t.innerHTML = '<div class="meta" style="margin:0">🌙 Brain was sleeping — waking it up and retrying…</div>';
+      await sleep(20000);
+      t.remove();
+      return sendText(msg, img, 1);
+    }
+    t.remove();
+    addMsg('⚠️ Network error: ' + e.message + ' (tap ↻ Retry on this message later, or check connection)', 'ai', 'System');
   }
-  clearImage();
 }
 boot();
 </script>
