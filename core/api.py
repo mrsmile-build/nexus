@@ -98,8 +98,8 @@ def require_key(key: str = Depends(key_header)):
 # Apply rate limiting as middleware (runs before every request)
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    # Skip rate limit for root health check
-    if request.url.path == "/":
+    # Skip rate limit for root health check and CORS preflight (OPTIONS)
+    if request.url.path == "/" or request.method == "OPTIONS":
         return await call_next(request)
     
     key = request.headers.get("X-NEXUS-Key", "")

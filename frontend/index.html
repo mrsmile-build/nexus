@@ -40,6 +40,7 @@
         <input type="text" id="msg" placeholder="Ask NEXUS anything..." onkeypress="if(event.key==='Enter')send()">
         <button onclick="send()">Send</button>
     </div>
+    <script src="config.js"></script>
     <script>
         // API URL: set via window.NEXUS_API_URL in config.js, or fallback to this page's origin
         const API = window.NEXUS_API_URL || window.location.origin;
@@ -115,7 +116,5 @@
             }
         }
     </script>
-    <!-- Config file: points to the Render backend -->
-    <script src="config.js"></script>
 </body>
 </html>
