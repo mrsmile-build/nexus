@@ -1,24 +1,39 @@
 """
-NEXUS Business Mentor Engine v0.2 (With Real-World Search)
+NEXUS Business Mentor Engine v0.3 (With Semantic Memory Integration)
 """
 import json
 from core.llm_client import ask, LLMError
 from engines.tools.src.math_tool import MathTool
 from engines.tools.src.search_tool import SearchTool
+from engines.memory_semantic.src.semantic_memory import SemanticMemory
 
 class BusinessEngine:
     def __init__(self):
         self.math = MathTool()
         self.search = SearchTool()
+        self.memory = SemanticMemory()
 
     def plan(self, situation: str, goal: str):
-        # 1. Gather real-world context first
+        # 1. THE ANTI-REDISCOVERY LOOP: Check Memory First
+        memory_hits = self.memory.search_similar(f"{situation} {goal}", limit=2)
+        memory_context = "No relevant past discoveries found in memory."
+        if memory_hits.get("results"):
+            memory_context = "PAST DISCOVERIES (Use this knowledge, do not re-research if applicable):\n"
+            for hit in memory_hits["results"]:
+                memory_context += f"- [{hit['title']}]: {hit['preview']} (Relevance Score: {hit['score']})\n"
+
+        # 2. Gather real-world context from the web
         market_context = self.search.search("low capital high margin business ideas current market", 2)
         price_context = self.search.search("wholesale prices for small business phone accessories or cleaning supplies", 2)
         
         system = f"""You are a battle-tested, street-smart business mentor. 
 You DO NOT give textbook advice. You focus on survival, cash flow, and avoiding scams.
 Your prices and costs MUST be grounded in the real-world market data provided below. Do not hallucinate costs.
+
+YOUR PAST MEMORY:
+---
+{memory_context}
+---
 
 REAL-WORLD MARKET DATA:
 ---
@@ -52,12 +67,23 @@ Output ONLY a valid JSON object with these exact keys:
             
             data = json.loads(clean.strip())
             
-            # Verify the math using the deterministic Math Tool
+            # Verify the math
             math_expr = data.get("survival_math", "0")
             math_check = self.math.calculate(math_expr)
             data["math_verified"] = math_check
             
-            return {"data": data, "method": "llm+math+search"}
+            # 3. SAVE TO MEMORY: Store this new plan so we never research it again
+            try:
+                mem_result = self.memory.store_discovery(
+                    title=data.get("business_idea", "Business Plan"),
+                    content=f"Situation: {situation}. Goal: {goal}. Plan: {json.dumps(data)}",
+                    metadata={"engine": "business", "verified": True}
+                )
+                data["saved_to_memory"] = mem_result
+            except Exception:
+                pass
+            
+            return {"data": data, "method": "llm+math+search+memory"}
         except json.JSONDecodeError:
             return {"raw": raw, "method": "llm", "error": "Failed to parse JSON"}
         except LLMError as e:
