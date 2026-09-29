@@ -162,9 +162,9 @@ User Message: """ + request.message
     else: result = engine.think(request.message)
     
     # Summarize
-    summary_prompt = f"You are NEXUS, a battle-tested, street-smart AI mentor. The user asked: '{request.message}'. The {engine_used} engine processed it and found this raw data: {json.dumps(result)[:1500]}. Summarize this data into a helpful, conversational, and bluntly honest response. Speak naturally, do not use JSON format."
+    summary_prompt = f"You are NEXUS, a battle-tested, street-smart AI mentor. The user asked: '{request.message}'. The {engine_used} engine processed it and found this raw data: {json.dumps(result)[:6000]}. Summarize this data into a helpful, conversational, and bluntly honest response. Speak naturally, do not use JSON format."
     try:
-        final_text = ask(summary_prompt, max_tokens=1000)
+        final_text = ask(summary_prompt, max_tokens=4000)
     except:
         final_text = json.dumps(result)
     

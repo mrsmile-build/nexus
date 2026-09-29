@@ -10,14 +10,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 #topbar { display: flex; gap: 8px; padding: 10px 12px; background: #181818; border-bottom: 1px solid #333; }
 #topbar select { flex: 1; background: #2a2a2a; color: #eee; border: 1px solid #444; border-radius: 8px; padding: 8px; font-size: 14px; }
 #topbar button { background: #2a52be; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-weight: bold; }
+#chips { display: flex; gap: 8px; padding: 8px 12px; overflow-x: auto; background: #151515; }
+.chip { flex: none; background: #222; border: 1px solid #3a3a3a; color: #cfe0ff; border-radius: 16px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
 #chat { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; }
 .msg { margin: 6px 0; padding: 12px 16px; border-radius: 18px; max-width: 88%; line-height: 1.5; font-size: 15px; word-wrap: break-word; white-space: pre-wrap; }
 .user { background: #2a52be; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
 .ai { background: #222; border: 1px solid #333; align-self: flex-start; border-bottom-left-radius: 4px; }
 .meta { font-size: 0.7em; color: #888; margin-top: 6px; font-style: italic; }
+#imgchip { display: none; margin: 0 12px 6px; background: #1d2a1d; border: 1px solid #2f4f2f; color: #bfe8bf; border-radius: 12px; padding: 6px 12px; font-size: 13px; align-items: center; gap: 8px; }
 #input-area { display: flex; padding: 12px; background: #181818; border-top: 1px solid #333; gap: 8px; }
 #input-area input { flex: 1; padding: 12px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 20px; font-size: 16px; outline: none; }
-#input-area button { background: #2a52be; color: #fff; border: none; border-radius: 20px; padding: 0 18px; font-weight: bold; }
+#input-area button { background: #2a52be; color: #fff; border: none; border-radius: 20px; padding: 0 16px; font-weight: bold; font-size: 16px; }
 #keybtn { background: #333 !important; }
 #setup { padding: 40px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
 #setup h2 { color: #2a52be; }
@@ -42,8 +45,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
     <select id="session-select" onchange="switchSession(this.value)"></select>
     <button onclick="newChat()">+ New</button>
   </div>
+  <div id="chips">
+    <span class="chip" onclick="useChip('I am a broke guy in Nigeria. Score 10 proven production businesses I can start today.')">💼 Business</span>
+    <span class="chip" onclick="useChip('Is this plant or remedy safe and what is it traditionally used for? ')">🌿 Nature</span>
+    <span class="chip" onclick="useChip('How do I manufacture this product cheaper with local materials? ')">🏭 Materials</span>
+    <span class="chip" onclick="useChip('My soil is poor. What exactly do I add to grow bigger harvests?')">🌱 Grow</span>
+    <span class="chip" onclick="useChip('Calculate ')">🧮 Math</span>
+  </div>
   <div id="chat"></div>
+  <div id="imgchip">🖼 Image attached <button onclick="clearImage()" style="background:#333;border:none;color:#fff;border-radius:8px;padding:2px 8px;">✕</button></div>
   <div id="input-area">
+    <button onclick="document.getElementById('img').click()" title="Attach image from gallery">📷</button>
+    <input type="file" id="img" accept="image/*" style="display:none" onchange="pickImage(this)">
     <input type="text" id="msg" placeholder="Ask NEXUS anything..." onkeypress="if(event.key==='Enter')send()">
     <button onclick="send()">Send</button>
     <button id="keybtn" onclick="resetKey()">🔑</button>
@@ -55,6 +68,7 @@ const API = window.NEXUS_API_URL || window.location.origin;
 const urlKey = new URLSearchParams(window.location.search).get('key');
 if (urlKey) { localStorage.setItem('nexus_key', urlKey); history.replaceState(null, '', window.location.pathname); }
 let key = localStorage.getItem('nexus_key');
+let pendingImage = "";
 
 let sessions = JSON.parse(localStorage.getItem('nexus_sessions_v1') || '[]');
 let activeId = localStorage.getItem('nexus_active_v1');
@@ -70,26 +84,45 @@ function addMsg(text, cls, meta){ paint(text, cls, meta); active().msgs.push({te
 function newChat(){ sessions.unshift({id: String(Date.now()), title: 'New Chat', msgs: []}); activeId = sessions[0].id; saveSessions(); renderSessions(); renderChat(); }
 function switchSession(id){ activeId = id; saveSessions(); renderChat(); }
 function resetKey(){ localStorage.removeItem('nexus_key'); location.reload(); }
+function useChip(t){ document.getElementById('msg').value = t; document.getElementById('msg').focus(); }
+
+function pickImage(el){
+  const f = el.files[0]; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 1024 / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      pendingImage = c.toDataURL('image/jpeg', 0.8);
+      document.getElementById('imgchip').style.display = 'flex';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(f);
+}
+function clearImage(){ pendingImage = ""; document.getElementById('imgchip').style.display = 'none'; document.getElementById('img').value = ""; }
 
 function boot(){
   if (!key) { document.getElementById('setup').style.display = 'flex'; return; }
-  document.getElementById('app').style.display = 'flex';
-  document.getElementById('app').style.flexDirection = 'column';
-  document.getElementById('app').style.height = '100vh';
+  const app = document.getElementById('app');
+  app.style.display = 'flex'; app.style.flexDirection = 'column'; app.style.height = '100vh';
   renderSessions(); renderChat();
 }
 function saveKey(){ key = document.getElementById('key-input').value.trim(); if (!key) return; localStorage.setItem('nexus_key', key); document.getElementById('setup').style.display = 'none'; boot(); }
 
 async function send(){
   const msg = document.getElementById('msg').value.trim();
-  if (!msg) return;
-  addMsg(msg, 'user');
+  if (!msg && !pendingImage) return;
+  addMsg(msg || '[Image]', 'user');
   document.getElementById('msg').value = '';
   const t = document.createElement('div'); t.className = 'msg ai typing-msg';
   t.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
   document.getElementById('chat').appendChild(t);
   try {
-    const res = await fetch(API + '/chat', { method: 'POST', headers: {'Content-Type':'application/json','X-NEXUS-Key':key}, body: JSON.stringify({message: msg}) });
+    const res = await fetch(API + '/chat', { method: 'POST', headers: {'Content-Type':'application/json','X-NEXUS-Key':key}, body: JSON.stringify({message: msg || "Describe this image.", image_url: pendingImage}) });
     const data = await res.json();
     document.querySelector('.typing-msg').remove();
     if (res.status === 401) addMsg('🔒 Access Denied. Tap 🔑 to re-enter your key.', 'ai', 'System');
@@ -99,6 +132,7 @@ async function send(){
     const tm = document.querySelector('.typing-msg'); if (tm) tm.remove();
     addMsg('⚠️ Network Error: ' + e.message, 'ai');
   }
+  clearImage();
 }
 boot();
 </script>
