@@ -81,3 +81,23 @@ class VisionRequest(BaseModel):
 @app.post("/see", dependencies=[Depends(require_key)])
 def see(request: VisionRequest):
     return vision_tool.see(request.image_url, request.question)
+
+from engines.memory_semantic.src.semantic_memory import SemanticMemory
+sem_memory = SemanticMemory()
+
+class StoreRequest(BaseModel):
+    title: str
+    content: str
+    metadata: dict = {}
+
+class SearchRequest(BaseModel):
+    query: str
+    limit: int = 3
+
+@app.post("/memory/store", dependencies=[Depends(require_key)])
+def store_memory(request: StoreRequest):
+    return sem_memory.store_discovery(request.title, request.content, request.metadata)
+
+@app.post("/memory/search", dependencies=[Depends(require_key)])
+def search_memory(request: SearchRequest):
+    return sem_memory.search_similar(request.query, request.limit)
