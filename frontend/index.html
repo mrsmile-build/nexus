@@ -279,7 +279,7 @@ async function sendText(msg, img, attempt){
     t.remove();
     if (res.status === 401) addMsg('🔒 Access denied. Menu → 🔑 to re-enter key.', 'ai', 'System');
     else if (res.status === 429) addMsg('⏱️ Rate limit reached. Wait 60 seconds.', 'ai', 'System');
-    else addMsg(data.response || 'No response.', 'ai', 'Engine: ' + (data.engine || 'core'));
+    else addMsg(data.response || 'No response.', 'ai', 'Engine: ' + (data.engine || 'core') + (data.truth_checked ? ' · ✅ truth-checked' : ''));
   } catch(e){
     if (attempt === 0) {
       t.innerHTML = '<div class="meta" style="margin:0">🌙 Brain was sleeping — waking it up and retrying…</div>';

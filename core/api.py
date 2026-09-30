@@ -22,6 +22,8 @@ from engines.agriculture.src.agriculture import AgricultureEngine
 from engines.tools.src.vision_tool import VisionTool
 from engines.tools.src.search_tool import SearchTool
 from engines.memory_semantic.src.semantic_memory import SemanticMemory
+from engines.truth.src.truth_engine import TruthEngine
+from engines.blend.src.blend_engine import BlendEngine
 from core.llm_client import ask
 
 app = FastAPI(title="NEXUS Cognitive Core API", version="2.0")
@@ -60,6 +62,8 @@ ag_engine = AgricultureEngine()
 vision_tool = VisionTool()
 search_tool = SearchTool()
 sem_memory = SemanticMemory()
+truth_engine = TruthEngine()
+blend_engine = BlendEngine()
 
 NEXUS_API_KEY = os.environ.get("NEXUS_API_KEY", "")
 key_header = APIKeyHeader(name="X-NEXUS-Key", auto_error=False)
@@ -179,13 +183,13 @@ def chat(request: ChatRequest):
         return {"response": vision_result.get("analysis", "I couldn't see the image."), "engine": "vision"}
 
     router_prompt = """You are a routing AI. Choose the single best engine.
-MATH=calculations. BUSINESS=money/startups/pricing/profit/selling/broke. NATURE=plants/herbs/medicine/charms. MATERIALS=cement/alloys/chemicals/manufacturing/formulations. DECOMPOSE=teardowns/how-made/supply-chain. GROW=farming/soil/crops. THINK=everything else.
+MATH=calculations. BUSINESS=money/startups/pricing/profit/selling/broke. NATURE=plants/herbs/medicine/charms. MATERIALS=cement/alloys/chemicals/manufacturing/formulations. DECOMPOSE=teardowns/how-made/supply-chain. GROW=farming/soil/crops. BLEND=substitutes/ratios/combining/‘I don't have X’/recreating something from parts (moringa, limestone, water). THINK=everything else.
 Reply with ONLY the engine word.
 User Message: """ + request.message
     try:
         raw_route = ask(router_prompt, max_tokens=12).strip().upper()
         route = "THINK"
-        for cand in ["MATERIALS", "DECOMPOSE", "BUSINESS", "NATURE", "MATH", "GROW", "THINK"]:
+        for cand in ["MATERIALS", "DECOMPOSE", "BUSINESS", "NATURE", "MATH", "GROW", "BLEND", "THINK"]:
             if cand in raw_route:
                 route = cand
                 break
@@ -200,6 +204,7 @@ User Message: """ + request.message
     elif route == "MATERIALS": result = materials_engine.formulate(request.message, "Optimize for cost and strength")
     elif route == "DECOMPOSE": result = decomposer.teardown(request.message)
     elif route == "GROW": result = ag_engine.optimize("Grow successfully", request.message)
+    elif route == "BLEND": result = blend_engine.blend(request.message)
     else: result = engine.think(request.message)
 
     try:
@@ -226,4 +231,12 @@ Summarize into a helpful, conversational, bluntly honest response. Speak natural
     except Exception:
         final_text = json.dumps(result)[:3000]
 
-    return {"response": final_text, "engine": engine_used}
+    # TRUTH ENGINE: adversarial verification on every answer
+    truth_checked = False
+    try:
+        final_text, critique = truth_engine.verify(request.message, final_text)
+        truth_checked = True
+    except Exception:
+        pass
+
+    return {"response": final_text, "engine": engine_used, "truth_checked": truth_checked}
