@@ -84,6 +84,13 @@ button { background: none; border: none; color: inherit; cursor: pointer; font: 
 .md tr:last-child td { border-bottom: none; }
 pre.code { background: #0d0d12; border: 1px solid #23232d; border-radius: 10px; padding: 12px 14px; overflow-x: auto; margin: 12px 0; font-family: Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.55; color: #9fe8c0; white-space: pre; }
 code.inline { background: #1a1a22; border-radius: 6px; padding: 1px 6px; font-family: monospace; font-size: 13px; color: #ffd58a; }
+
+.stage { font-size: 12px; color: #6d7185; margin-top: 8px; font-style: italic; }
+pre.code { position: relative; }
+.codecopy { position: absolute; top: 6px; right: 6px; background: #1a1a22; border: 1px solid #2a2a33; color: #9aa0b5; border-radius: 8px; padding: 3px 8px; font-size: 12px; }
+.tbl { background: linear-gradient(to left, rgba(20,20,25,.85), transparent) right/22px 100% no-repeat; }
+.md table { font-size: 12.8px; }
+.md th, .md td { padding: 8px 9px; }
 </style>
 </head>
 <body>
@@ -250,6 +257,11 @@ function paint(text, cls, meta, ts){
   const d = document.createElement('div'); d.className = 'msg ' + cls;
   const c = document.createElement('div');
   if (cls === 'ai') { c.className = 'md'; c.innerHTML = fmt(text); } else { c.textContent = text; }
+  if (cls === 'ai') c.querySelectorAll('pre.code').forEach(pre => {
+    const b = document.createElement('button'); b.className = 'codecopy'; b.textContent = '⧉';
+    b.onclick = () => copyText(pre.querySelector('code').innerText);
+    pre.appendChild(b);
+  });
   d.appendChild(c);
   const m = document.createElement('div'); m.className = 'meta';
   m.textContent = (meta ? meta + ' · ' : '') + (ts || '');
@@ -325,23 +337,29 @@ function send(){
 async function sendText(msg, img, attempt){
   attempt = attempt || 0;
   const t = document.createElement('div'); t.className = 'msg ai typing-msg';
-  t.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  const stages = ['Routing your question…', 'Consulting specialist engines…', 'Cross-checking with Truth Engine…', 'Formatting answer…'];
+  t.innerHTML = '<div class="typing"><span></span><span></span><span></span></div><div class="stage">' + stages[0] + '</div>';
+  let si = 0;
+  const stageTimer = setInterval(() => { si = (si + 1) % stages.length; const el = t.querySelector('.stage'); if (el) el.textContent = stages[si]; }, 8000);
   document.getElementById('chat').appendChild(t);
   document.getElementById('chat').scrollTop = 1e6;
   try {
     const res = await fetch(API + '/chat', { method: 'POST', headers: {'Content-Type':'application/json','X-NEXUS-Key':key}, body: JSON.stringify({message: msg, image_url: img, history: active().msgs.slice(-5, -1).map(m => ({role: m.cls === 'user' ? 'User' : 'NEXUS', text: m.text.slice(0, 400)}))}) });
     const data = await res.json();
+    clearInterval(stageTimer);
     t.remove();
     if (res.status === 401) addMsg('🔒 Access denied. Menu → 🔑 to re-enter key.', 'ai', 'System');
     else if (res.status === 429) addMsg('⏱️ Rate limit reached. Wait 60 seconds.', 'ai', 'System');
     else addMsg(data.response || 'No response.', 'ai', 'Engine: ' + (data.engine || 'core') + (data.truth_checked ? ' · ✅ truth-checked' : ''));
   } catch(e){
     if (attempt === 0) {
+      clearInterval(stageTimer);
       t.innerHTML = '<div class="meta" style="margin:0">🌙 Brain was sleeping — waking it up and retrying…</div>';
       await sleep(20000);
       t.remove();
       return sendText(msg, img, 1);
     }
+    clearInterval(stageTimer);
     t.remove();
     addMsg('⚠️ Network error: ' + e.message, 'ai', 'System');
   }
