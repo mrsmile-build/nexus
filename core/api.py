@@ -306,11 +306,11 @@ def growth_newsletter(request: NewsletterRequest):
 def consolidate():
     return consolidation_engine.consolidate(days_back=30)
 
-@app.post("/briefing, dependencies=[Depends(require_key)])
+@app.post("/briefing", dependencies=[Depends(require_key)])
 def get_briefing():
     return briefing_engine.generate_briefing(days_back=7)
 
-@app.post("/evolution/upgrade, dependencies=[Depends(require_key)])
+@app.post("/evolution/upgrade", dependencies=[Depends(require_key)])
 def evolution_upgrade(request: UpgradeRequest):
     return evolution_engine.upgrade(request.artifact, request.goal)
 
