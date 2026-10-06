@@ -27,6 +27,7 @@ from engines.blend.src.blend_engine import BlendEngine
 from engines.code.src.code_engine import CodeEngine
 from engines.skills.src.skills_engine import SkillsEngine
 from engines.growth.src.growth_engine import GrowthEngine
+from engines.evolution.src.evolution_engine import EvolutionEngine
 from core.llm_client import ask
 
 app = FastAPI(title="NEXUS Cognitive Core API", version="2.0")
@@ -70,6 +71,7 @@ blend_engine = BlendEngine()
 code_engine = CodeEngine()
 skills_engine = SkillsEngine()
 growth_engine = GrowthEngine()
+evolution_engine = EvolutionEngine()
 
 NEXUS_API_KEY = os.environ.get("NEXUS_API_KEY", "")
 key_header = APIKeyHeader(name="X-NEXUS-Key", auto_error=False)
@@ -137,6 +139,10 @@ class ForumRequest(BaseModel):
 
 class NewsletterRequest(BaseModel):
     days_back: int = 7
+
+class UpgradeRequest(BaseModel):
+    artifact: str
+    goal: str = "next generation"
 
 class TeachRequest(BaseModel):
     skill: str
@@ -233,6 +239,10 @@ def growth_forum(request: ForumRequest):
 def growth_newsletter(request: NewsletterRequest):
     return growth_engine.newsletter_digest(request.days_back)
 
+@app.post("/evolution/upgrade", dependencies=[Depends(require_key)])
+def evolution_upgrade(request: UpgradeRequest):
+    return evolution_engine.upgrade(request.artifact, request.goal)
+
 @app.post("/skills/teach", dependencies=[Depends(require_key)])
 def skills_teach(request: TeachRequest):
     return skills_engine.teach(request.skill, request.level, request.context)
@@ -265,7 +275,7 @@ def chat(request: ChatRequest):
         return {"response": vision_result.get("analysis", "I couldn't see the image."), "engine": "vision"}
 
     router_prompt = """You are a routing AI. Choose the single best engine.
-MATH=calculations. BUSINESS=money/startups/pricing/profit/selling/broke. NATURE=plants/herbs/medicine/charms. MATERIALS=cement/alloys/chemicals/manufacturing/formulations. DECOMPOSE=teardowns/how-made/supply-chain. GROW=farming/soil/crops. BLEND=substitutes/ratios/combining/‘I don't have X’/recreating something from parts (moringa, limestone, water). CODE=programming/debug/review/fix/scaffold/build software. SKILLS=teach/learn/explain/master any skill, craft, trade, art or how-to (old or modern, physical or online). THINK=everything else.
+MATH=calculations. BUSINESS=money/startups/pricing/profit/selling/broke. NATURE=plants/herbs/medicine/charms. MATERIALS=cement/alloys/chemicals/manufacturing/formulations. DECOMPOSE=teardowns/how-made/supply-chain. GROW=farming/soil/crops. BLEND=substitutes/ratios/combining/‘I don't have X’/recreating something from parts (moringa, limestone, water). CODE=programming/debug/review/fix/scaffold/build software. SKILLS=teach/learn/explain/master any skill, craft, trade, art or how-to (old or modern, physical or online). EVOLUTION=upgrade/improve/next-generation/future-proof any product, system, or technology (iPhone, bridge, medicine, car). THINK=everything else.
 Reply with ONLY the engine word.
 User Message: """ + request.message
     try:
@@ -289,6 +299,7 @@ User Message: """ + request.message
     elif route == "BLEND": result = blend_engine.blend(request.message)
     elif route == "CODE": result = {"note": "Use /code/review, /code/fix or /code/scaffold for full power", "quick": engine.think(request.message)}
     elif route == "SKILLS": result = skills_engine.teach(request.message)
+    elif route == "EVOLUTION": result = evolution_engine.upgrade(request.message)
     else: result = engine.think(request.message)
 
     try:
