@@ -17,7 +17,7 @@ GROQ_MODEL = "openai/gpt-oss-120b"
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-OPENROUTER_MODEL = "google/gemini-flash-1.5"
+OPENROUTER_MODEL = "google/gemini-2.0-flash-exp:free"
 
 def _call_groq(prompt: str, system: str = "", max_tokens: int = 1000) -> Optional[str]:
     if not GROQ_KEY:
