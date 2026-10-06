@@ -30,6 +30,7 @@ from engines.growth.src.growth_engine import GrowthEngine
 from engines.evolution.src.evolution_engine import EvolutionEngine
 from engines.briefing.src.briefing_engine import BriefingEngine
 from engines.consolidation.src.consolidation_engine import ConsolidationEngine
+from engines.cross_domain.src.cross_domain_engine import CrossDomainEngine
 from engines.tools.src.telegram_notifier import TelegramNotifier
 from core.llm_client import ask
 
@@ -77,6 +78,7 @@ growth_engine = GrowthEngine()
 evolution_engine = EvolutionEngine()
 briefing_engine = BriefingEngine()
 consolidation_engine = ConsolidationEngine()
+cross_domain_engine = CrossDomainEngine()
 telegram = TelegramNotifier()
 
 NEXUS_API_KEY = os.environ.get("NEXUS_API_KEY", "")
@@ -301,6 +303,10 @@ def growth_forum(request: ForumRequest):
 @app.post("/growth/newsletter", dependencies=[Depends(require_key)])
 def growth_newsletter(request: NewsletterRequest):
     return growth_engine.newsletter_digest(request.days_back)
+
+@app.post("/cross-domain", dependencies=[Depends(require_key)])
+def cross_domain(request: ChatRequest):
+    return cross_domain_engine.find_connections(request.message)
 
 @app.post("/consolidate", dependencies=[Depends(require_key)])
 def consolidate():

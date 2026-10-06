@@ -28,7 +28,27 @@ class BusinessEngine:
             val = None
         return expr, val, res
 
-    def plan(self, situation: str, goal: str):
+        def _safety_framework_check(self, idea: dict) -> dict:
+        """Quality control + safety lens for business ideas."""
+        prompt = f"""Business idea: {json.dumps(idea)[:1200]}
+List quality-control requirements, regulatory compliance, safety hazards, mitigation strategies.
+Output ONLY valid JSON:
+{{"quality_control": [], "regulatory_compliance": [], "safety_hazards": [], "mitigation_strategies": []}}"""
+        try:
+            raw = ask(prompt, max_tokens=800)
+            clean = raw.strip()
+            for t in ("```json", "```"):
+                if clean.startswith(t): clean = clean[len(t):]
+            if clean.endswith("```"): clean = clean[:-3]
+            return json.loads(clean.strip())
+        except Exception:
+            return {"quality_control": [], "safety_hazards": []}
+
+def plan(self, situation: str, goal: str):
+        # Rural economy detector (self-improvement)
+        if any(k in (situation + " " + goal).lower() for k in ["rural", "village", "low population", "small town", "countryside"]):
+            situation += " CONTEXT: rural/low-population area - prioritize value-added products, pre-payment/subscription cash-flow models, premium urban buyers, abundant local raw materials."
+
         memory_hits = self.memory.search_similar(f"{situation} {goal}", limit=2)
         memory_context = "None"
         if memory_hits.get("results"):
@@ -97,6 +117,12 @@ Output ONLY a valid JSON object:
                 idea["nexus_score"] = val
                 idea["math_verified"] = res.get("success", False)
                 rows.append(f"| {idea.get('name','?')} | {val}/100 | {idea.get('competition_pressure','?')}% | {idea.get('broke_start_score','?')} | {idea.get('scale_potential','?')} | {idea.get('ecosystem_pull','?')} | {idea.get('b2b_corporate_potential','?')} |")
+            for idea in data.get("ideas", [])[:2]:
+                try:
+                    idea["safety_framework"] = self._safety_framework_check(idea)
+                except Exception:
+                    pass
+
             data.get("ideas", []).sort(key=lambda x: x.get("nexus_score") or 0, reverse=True)
             data["scorecard_markdown"] = "\n".join(rows)
 

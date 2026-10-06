@@ -11,6 +11,40 @@ class NatureCore:
     def __init__(self):
         self.search = SearchTool()
 
+    def _check_sterility(self, subject: str, context: str) -> dict:
+        """Evaluate contamination risks for traditional remedies."""
+        sterility_prompt = f"""You are a microbiological safety expert. Analyze this traditional remedy for contamination risks:
+
+Subject: {subject}
+Context: {context}
+
+Evaluate:
+1. Sterility risks (bacterial, fungal, viral contamination)
+2. Preparation method safety (non-sterile tools, environmental contamination)
+3. Storage and shelf-life concerns
+4. High-risk populations (immunocompromised, children, elderly)
+
+If HIGH RISK detected, suggest safer alternatives.
+
+Output ONLY valid JSON:
+{{
+  "sterility_risk_level": "low|medium|high|critical",
+  "contamination_types": ["bacterial", "fungal"],
+  "preparation_hazards": ["specific hazard 1"],
+  "high_risk_populations": ["group 1"],
+  "safer_alternatives": ["alternative 1"],
+  "warning_message": "clear warning if risk is high or critical"
+}}"""
+        try:
+            raw = ask(sterility_prompt, max_tokens=1200)
+            clean = raw.strip()
+            if clean.startswith("```json"): clean = clean[7:]
+            if clean.startswith("```"): clean = clean[3:]
+            if clean.endswith("```"): clean = clean[:-3]
+            return json.loads(clean.strip())
+        except Exception:
+            return {"sterility_risk_level": "unknown", "warning_message": "Could not evaluate sterility"}
+
     def investigate(self, subject: str, tradition: str = "General"):
         # 1. Gather real-world ethnobotanical, pharmacological, and anthropological data
         ethno_context = self.search.search(f"traditional {tradition} medicine uses of {subject} ethnobotany anthropology", 3)

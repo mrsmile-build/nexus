@@ -13,7 +13,24 @@ class MaterialsEngine:
         self.math = MathTool()
         self.search = SearchTool()
 
-    def formulate(self, target_material: str, constraints: str):
+        def _map_agri_byproducts(self, target: str) -> dict:
+        """Map agricultural waste to industrial substitutes."""
+        prompt = f"""You are an industrial materials expert in agricultural by-product utilization.
+Target material/application: {target}
+List crop-residue substitutes for conventional materials.
+Output ONLY valid JSON:
+{{"byproduct_substitutes": [{{"byproduct": "", "replaces": "", "processing": "", "performance": "", "availability": "", "sustainability": ""}}], "cost_comparison": ""}}"""
+        try:
+            raw = ask(prompt, max_tokens=1200)
+            clean = raw.strip()
+            for t in ("```json", "```"):
+                if clean.startswith(t): clean = clean[len(t):]
+            if clean.endswith("```"): clean = clean[:-3]
+            return json.loads(clean.strip())
+        except Exception:
+            return {"byproduct_substitutes": []}
+
+def formulate(self, target_material: str, constraints: str):
         # 1. Research alternative materials and current market prices
         alt_context = self.search.search(f"alternative supplementary materials for {target_material} low cost high strength", 2)
         price_context = self.search.search(f"wholesale price per ton raw materials {target_material} alternatives", 2)
