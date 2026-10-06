@@ -43,7 +43,7 @@ def _call_groq(prompt: str, system: str = "", max_tokens: int = 1000) -> Optiona
             return data["choices"][0]["message"]["content"]
     except urllib.error.HTTPError as e:
         body = e.read().decode() if e.fp else ""
-        if e.code == 429:
+        if e.code in (429, 403, 503):
             return None  # Signal fallback
         raise LLMError(f"Groq {e.code}: {body[:300]}")
     except Exception as e:
