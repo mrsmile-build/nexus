@@ -29,6 +29,7 @@ from engines.skills.src.skills_engine import SkillsEngine
 from engines.growth.src.growth_engine import GrowthEngine
 from engines.evolution.src.evolution_engine import EvolutionEngine
 from engines.briefing.src.briefing_engine import BriefingEngine
+from engines.consolidation.src.consolidation_engine import ConsolidationEngine
 from engines.tools.src.telegram_notifier import TelegramNotifier
 from core.llm_client import ask
 
@@ -75,6 +76,7 @@ skills_engine = SkillsEngine()
 growth_engine = GrowthEngine()
 evolution_engine = EvolutionEngine()
 briefing_engine = BriefingEngine()
+consolidation_engine = ConsolidationEngine()
 telegram = TelegramNotifier()
 
 NEXUS_API_KEY = os.environ.get("NEXUS_API_KEY", "")
@@ -300,7 +302,11 @@ def growth_forum(request: ForumRequest):
 def growth_newsletter(request: NewsletterRequest):
     return growth_engine.newsletter_digest(request.days_back)
 
-@app.post("/briefing", dependencies=[Depends(require_key)])
+@app.post("/consolidate", dependencies=[Depends(require_key)])
+def consolidate():
+    return consolidation_engine.consolidate(days_back=30)
+
+@app.post("/briefing, dependencies=[Depends(require_key)])
 def get_briefing():
     return briefing_engine.generate_briefing(days_back=7)
 
