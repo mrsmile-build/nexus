@@ -11,16 +11,18 @@ class CrossDomainEngine:
         self.memory = SemanticMemory()
 
     def find_connections(self, query: str):
-        all_hits = []
-        for domain in ["business", "materials", "nature", "agriculture", "skills"]:
-            hits = self.memory.search_similar(f"{query} {domain}", limit=2)
-            all_hits.extend(hits.get("results", []))
+        # Simplified: just use the query directly without complex domain filtering
+        hits = self.memory.search_similar(query, limit=5)
+        all_hits = hits.get("results", [])
+        
         if not all_hits:
             return {"connections": [], "method": "no_memory"}
+            
         mem_ctx = "\n".join(
             f"- [{h.get('title', '')}] ({h.get('metadata', {}).get('domain', 'general')}): {h.get('preview', '')}"
-            for h in all_hits[:10]
+            for h in all_hits[:5]
         )
+        
         system = f"""You are a cross-domain innovation expert. Find unexpected connections between fields.
 Query: {query}
 Discoveries:
@@ -28,10 +30,10 @@ Discoveries:
 Output ONLY valid JSON:
 {{"connections": [{{"domain_a": "", "domain_b": "", "synergy": "", "innovation": "", "evidence": []}}]}}"""
         try:
-            raw = ask(query, system=system, max_tokens=2000)
+            raw = ask(query, system=system, max_tokens=1500)
             clean = raw.strip()
-            for t in ("```json", "```"):
-                if clean.startswith(t): clean = clean[len(t):]
+            if clean.startswith("```json"): clean = clean[7:]
+            if clean.startswith("```"): clean = clean[3:]
             if clean.endswith("```"): clean = clean[:-3]
             return {"data": json.loads(clean.strip()), "method": "cross-domain-mapper"}
         except json.JSONDecodeError:
