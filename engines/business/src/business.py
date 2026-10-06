@@ -1,12 +1,14 @@
 """
-NEXUS Business Mentor Engine v0.5
-HARD RULE: proven-demand businesses only. Scorecard + SymPy ranking + memory.
+NEXUS Business Mentor Engine v0.6
+Proven-demand rule + SymPy scorecard + rural detector + safety framework + memory.
 """
 import json
 from core.llm_client import ask, LLMError
 from engines.tools.src.math_tool import MathTool
 from engines.tools.src.search_tool import SearchTool
 from engines.memory_semantic.src.semantic_memory import SemanticMemory
+
+RURAL_KEYS = ["rural", "village", "low population", "small town", "countryside"]
 
 class BusinessEngine:
     def __init__(self):
@@ -28,26 +30,27 @@ class BusinessEngine:
             val = None
         return expr, val, res
 
-        def _safety_framework_check(self, idea: dict) -> dict:
-        """Quality control + safety lens for business ideas."""
-        prompt = f"""Business idea: {json.dumps(idea)[:1200]}
-List quality-control requirements, regulatory compliance, safety hazards, mitigation strategies.
-Output ONLY valid JSON:
-{{"quality_control": [], "regulatory_compliance": [], "safety_hazards": [], "mitigation_strategies": []}}"""
+    def _safety_framework_check(self, idea: dict) -> dict:
+        """Quality control + safety lens for a business idea."""
+        prompt = ("Business idea: " + json.dumps(idea)[:1200] + "\n"
+                  "List quality-control requirements, regulatory compliance, safety hazards, mitigation strategies.\n"
+                  "Output ONLY valid JSON:\n"
+                  '{"quality_control": [], "regulatory_compliance": [], "safety_hazards": [], "mitigation_strategies": []}')
         try:
             raw = ask(prompt, max_tokens=800)
             clean = raw.strip()
-            for t in ("```json", "```"):
-                if clean.startswith(t): clean = clean[len(t):]
+            if clean.startswith("```json"): clean = clean[7:]
+            if clean.startswith("```"): clean = clean[3:]
             if clean.endswith("```"): clean = clean[:-3]
             return json.loads(clean.strip())
         except Exception:
             return {"quality_control": [], "safety_hazards": []}
 
-def plan(self, situation: str, goal: str):
+    def plan(self, situation: str, goal: str):
         # Rural economy detector (self-improvement)
-        if any(k in (situation + " " + goal).lower() for k in ["rural", "village", "low population", "small town", "countryside"]):
-            situation += " CONTEXT: rural/low-population area - prioritize value-added products, pre-payment/subscription cash-flow models, premium urban buyers, abundant local raw materials."
+        if any(k in (situation + " " + goal).lower() for k in RURAL_KEYS):
+            situation += (" CONTEXT: rural/low-population area - prioritize value-added products, "
+                          "pre-payment/subscription cash-flow models, premium urban buyers, abundant local raw materials.")
 
         memory_hits = self.memory.search_similar(f"{situation} {goal}", limit=2)
         memory_context = "None"
@@ -110,21 +113,26 @@ Output ONLY a valid JSON object:
 
             data = json.loads(clean.strip())
 
-            rows = ["| Idea | NEXUS SCORE | Competition | Broke-Start | Scale | Ecosystem | B2B |",
-                    "|---|---|---|---|---|---|---|"]
             for idea in data.get("ideas", []):
                 expr, val, res = self._score_idea(idea)
                 idea["nexus_score"] = val
                 idea["math_verified"] = res.get("success", False)
-                rows.append(f"| {idea.get('name','?')} | {val}/100 | {idea.get('competition_pressure','?')}% | {idea.get('broke_start_score','?')} | {idea.get('scale_potential','?')} | {idea.get('ecosystem_pull','?')} | {idea.get('b2b_corporate_potential','?')} |")
-            for idea in data.get("ideas", [])[:2]:
+
+            scored = sorted(data.get("ideas", []), key=lambda x: x.get("nexus_score") or 0, reverse=True)
+
+            rows = ["| Idea | NEXUS SCORE | Competition | Broke-Start | Scale | Ecosystem | B2B |",
+                    "|---|---|---|---|---|---|---|"]
+            for idea in scored:
+                rows.append(f"| {idea.get('name','?')} | {idea.get('nexus_score')}/100 | {idea.get('competition_pressure','?')}% | {idea.get('broke_start_score','?')} | {idea.get('scale_potential','?')} | {idea.get('ecosystem_pull','?')} | {idea.get('b2b_corporate_potential','?')} |")
+            data["scorecard_markdown"] = "\n".join(rows)
+
+            # Safety framework on the top 2 ideas (self-improvement)
+            for idea in scored[:2]:
                 try:
                     idea["safety_framework"] = self._safety_framework_check(idea)
                 except Exception:
                     pass
-
-            data.get("ideas", []).sort(key=lambda x: x.get("nexus_score") or 0, reverse=True)
-            data["scorecard_markdown"] = "\n".join(rows)
+            data["ideas"] = scored
 
             try:
                 self.memory.store_discovery(
@@ -136,7 +144,7 @@ Output ONLY a valid JSON object:
             except Exception:
                 data["saved_to_memory"] = False
 
-            return {"data": data, "method": "llm+math+search+memory+scorecard"}
+            return {"data": data, "method": "llm+math+search+memory+scorecard+safety"}
         except json.JSONDecodeError:
             return {"raw": raw, "method": "llm", "error": "Failed to parse JSON"}
         except LLMError as e:
