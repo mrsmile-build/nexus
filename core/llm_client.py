@@ -1,11 +1,13 @@
 """
-NEXUS LLM Client with Dynamic Model Discovery.
-Primary: Groq. Fallback: Asks OpenRouter for live list of free models.
+NEXUS LLM Client - Ultimate Resilience Edition.
+Primary: Groq. Fallback: tries ALL free OpenRouter models sequentially.
+Never gives up on first failure.
 """
 import os
 import json
+import time
 import urllib.request
-from typing import Optional
+from typing import Optional, List
 
 class LLMError(Exception):
     pass
@@ -18,37 +20,44 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_LIST_URL = "https://openrouter.ai/api/v1/models"
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
-# Cache the discovered model so we don't fetch the list every time
-_cached_fallback_model = None
+# Cache the list of free models for 1 hour
+_model_cache = {"models": [], "timestamp": 0}
 
-def _get_best_free_model():
-    """Fetch live list from OpenRouter and find a working free model."""
-    global _cached_fallback_model
-    if _cached_fallback_model:
-        return _cached_fallback_model
+def _get_free_models() -> List[str]:
+    """Fetch live list of free models from OpenRouter."""
+    global _model_cache
+    now = time.time()
+    
+    # Return cache if less than 1 hour old
+    if _model_cache["models"] and (now - _model_cache["timestamp"]) < 3600:
+        return _model_cache["models"]
     
     try:
         req = urllib.request.Request(OPENROUTER_LIST_URL)
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode())
-            
-        # Filter for free models (pricing 0)
-        free_models = [m['id'] for m in data.get('data', []) 
-                       if m.get('pricing', {}).get('prompt') == '0' 
-                       and m.get('pricing', {}).get('completion') == '0']
         
-        if not free_models:
-            raise ValueError("No free models found on OpenRouter")
-            
-        # Pick the first one (usually llama or deepseek)
-        _cached_fallback_model = free_models[0]
-        print(f"NEXUS: Discovered fallback model {_cached_fallback_model}")
-        return _cached_fallback_model
+        # Filter for truly free models (pricing == 0)
+        free = [m['id'] for m in data.get('data', []) 
+                if m.get('pricing', {}).get('prompt') == '0' 
+                and m.get('pricing', {}).get('completion') == '0']
         
+        if free:
+            _model_cache = {"models": free, "timestamp": now}
+            print(f"NEXUS: Cached {len(free)} free OpenRouter models")
+            return free
+        
+        raise ValueError("No free models found")
     except Exception as e:
-        print(f"NEXUS: Failed to discover models ({e}), using default")
-        _cached_fallback_model = "meta-llama/llama-3.3-70b-instruct:free"
-        return _cached_fallback_model
+        print(f"NEXUS: Model discovery failed ({e}), using fallback list")
+        # Hardcoded backup list of known-free models
+        return [
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "deepseek/deepseek-chat-v3-0324:free",
+            "google/gemini-2.0-flash-exp:free",
+            "mistralai/mistral-nemo:free",
+            "huggingfaceh4/zephyr-7b-beta:free",
+        ]
 
 def _post(url, headers, payload):
     req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers=headers, method="POST")
@@ -74,25 +83,31 @@ def _call_openrouter(prompt, system="", max_tokens=1000):
     if not OPENROUTER_KEY:
         raise LLMError("No OpenRouter key and Groq unavailable")
     
-    model = _get_best_free_model()
     messages = ([{"role": "system", "content": system}] if system else []) + [{"role": "user", "content": prompt}]
     headers = {"Authorization": f"Bearer {OPENROUTER_KEY}", "Content-Type": "application/json",
                "HTTP-Referer": "https://nexus-core.onrender.com", "X-Title": "NEXUS Cognitive Core"}
     
-    payload = {"model": model, "messages": messages, "max_tokens": max_tokens}
+    models = _get_free_models()
+    errors = []
     
-    try:
-        return _post(OPENROUTER_URL, headers, payload)
-    except urllib.error.HTTPError as e:
-        # If the dynamic model fails, clear cache and try again once
-        global _cached_fallback_model
-        _cached_fallback_model = None
-        model = _get_best_free_model()
-        payload["model"] = model
+    # Try EACH model until one succeeds
+    for model in models:
+        payload = {"model": model, "messages": messages, "max_tokens": max_tokens}
         try:
-            return _post(OPENROUTER_URL, headers, payload)
-        except Exception as e2:
-            raise LLMError(f"OpenRouter failed even after refresh: {e2}")
+            result = _post(OPENROUTER_URL, headers, payload)
+            print(f"NEXUS: Success with {model}")
+            return result
+        except urllib.error.HTTPError as e:
+            err_msg = f"{model}:{e.code}"
+            errors.append(err_msg)
+            print(f"NEXUS: {err_msg}, trying next...")
+            continue
+        except Exception as e:
+            errors.append(f"{model}:{type(e).__name__}")
+            continue
+    
+    # All models failed
+    raise LLMError(f"All {len(models)} OpenRouter models failed. Errors: {'; '.join(errors[-3:])}")
 
 def ask(prompt, system="", max_tokens=1000):
     result = _call_groq(prompt, system, max_tokens)
