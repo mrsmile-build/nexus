@@ -28,6 +28,8 @@ from engines.code.src.code_engine import CodeEngine
 from engines.skills.src.skills_engine import SkillsEngine
 from engines.growth.src.growth_engine import GrowthEngine
 from engines.evolution.src.evolution_engine import EvolutionEngine
+from engines.briefing.src.briefing_engine import BriefingEngine
+from engines.tools.src.telegram_notifier import TelegramNotifier
 from core.llm_client import ask
 
 app = FastAPI(title="NEXUS Cognitive Core API", version="2.0")
@@ -72,6 +74,8 @@ code_engine = CodeEngine()
 skills_engine = SkillsEngine()
 growth_engine = GrowthEngine()
 evolution_engine = EvolutionEngine()
+briefing_engine = BriefingEngine()
+telegram = TelegramNotifier()
 
 NEXUS_API_KEY = os.environ.get("NEXUS_API_KEY", "")
 key_header = APIKeyHeader(name="X-NEXUS-Key", auto_error=False)
@@ -172,24 +176,81 @@ class SearchRequest(BaseModel):
 # ---------- Original Engine Endpoints (kept for Uncle projects) ----------
 @app.post("/scheduled/run", dependencies=[Depends(require_key)])
 def scheduled_run():
-    # Daily autonomous work
+    """Autonomous daily work: research, generate content, create briefing, notify user."""
     import random
-    topics = [
-        ("How to start a palm oil refining business in Nigeria", "palm oil business Nigeria"),
-        ("10 proven farm-to-table business ideas in Lagos 2026", "farm business Lagos"),
-        ("Why soap making is the most recession-proof small business", "soap making business"),
-        ("How to export Nigerian agricultural products to Europe", "export agriculture Nigeria"),
-        ("Cheapest cement formula for small-scale builders", "cement formula cheap"),
+    from datetime import datetime
+
+    # 1. Pick a research topic (rotate through themes)
+    themes = [
+        ("Nigerian business opportunities", "business"),
+        ("Agricultural innovations", "agriculture"),
+        ("Materials science breakthroughs", "materials"),
+        ("Traditional medicine research", "nature"),
     ]
-    topic, kw = random.choice(topics)
-    article = growth_engine.seo_article(topic, kw)
+    theme, domain = random.choice(themes)
+
+    # 2. Generate content and store discoveries
+    topics = [
+        f"Latest {theme} {datetime.now().year}",
+        f"Emerging trends in {theme}",
+        f"Cost-effective strategies for {theme}",
+    ]
+    topic = random.choice(topics)
+
+    article = growth_engine.seo_article(topic, theme)
+    if article.get("data"):
+        try:
+            sem_memory.store_discovery(
+                title=f"SEO Research: {topic}",
+                content=json.dumps(article["data"])[:2000],
+                metadata={"domain": domain, "type": "seo_research"}
+            )
+        except Exception:
+            pass
+
     forum_q = random.choice([
-        "What's the best small business to start in Nigeria with 100k naira?",
-        "How do I start exporting from Nigeria?",
-        "Is AI useful for small businesses in Africa?",
+        f"What are the best opportunities in {theme} right now?",
+        f"How to succeed in {theme} with limited capital?",
+        f"What mistakes do people make in {theme}?",
     ])
-    answer = growth_engine.forum_answer(forum_q, forum="nairaland")
-    return {"article": article, "forum_answer": answer, "method": "scheduled_run"}
+    answer = growth_engine.forum_answer(forum_q, forum="generic")
+    if answer.get("data"):
+        try:
+            sem_memory.store_discovery(
+                title=f"Forum Insight: {forum_q[:50]}",
+                content=json.dumps(answer["data"])[:1500],
+                metadata={"domain": domain, "type": "forum_insight"}
+            )
+        except Exception:
+            pass
+
+    # 3. Generate morning briefing
+    briefing = briefing_engine.generate_briefing(days_back=7)
+
+    # 4. Send Telegram notification
+    telegram_sent = False
+    if briefing.get("data"):
+        msg = f"<b>🌅 NEXUS Morning Briefing</b>\n\n"
+        msg += f"<b>Summary:</b> {briefing['data'].get('summary', 'No summary')}\n\n"
+        msg += f"<b>Key Findings:</b>\n"
+        for f in briefing['data'].get('key_findings', [])[:3]:
+            msg += f"• {f}\n"
+        if briefing['data'].get('opportunities'):
+            msg += f"\n<b>Opportunities:</b>\n"
+            for o in briefing['data'].get('opportunities', [])[:2]:
+                msg += f"• {o}\n"
+        msg += f"\n<i>Open NEXUS to see full details.</i>"
+
+        result = telegram.send(msg)
+        telegram_sent = result.get("sent", False)
+
+    return {
+        "article": article,
+        "forum_answer": answer,
+        "briefing": briefing,
+        "telegram_sent": telegram_sent,
+        "method": "autonomous_daily_run"
+    }
 
 @app.get("/")
 def read_root():
@@ -239,7 +300,11 @@ def growth_forum(request: ForumRequest):
 def growth_newsletter(request: NewsletterRequest):
     return growth_engine.newsletter_digest(request.days_back)
 
-@app.post("/evolution/upgrade", dependencies=[Depends(require_key)])
+@app.post("/briefing", dependencies=[Depends(require_key)])
+def get_briefing():
+    return briefing_engine.generate_briefing(days_back=7)
+
+@app.post("/evolution/upgrade, dependencies=[Depends(require_key)])
 def evolution_upgrade(request: UpgradeRequest):
     return evolution_engine.upgrade(request.artifact, request.goal)
 
