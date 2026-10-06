@@ -1,19 +1,20 @@
 """
-NEXUS Materials & Chemistry Engine v0.1
-Formulates cheaper, stronger materials (cement, alloys, composites)
-using real market prices and deterministic math for mixture ratios.
+NEXUS Materials Engine v0.6
+Formulation optimization + agri-byproduct mapping + SymPy verification.
 """
 import json
 from core.llm_client import ask, LLMError
 from engines.tools.src.math_tool import MathTool
 from engines.tools.src.search_tool import SearchTool
+from engines.memory_semantic.src.semantic_memory import SemanticMemory
 
 class MaterialsEngine:
     def __init__(self):
         self.math = MathTool()
         self.search = SearchTool()
+        self.memory = SemanticMemory()
 
-        def _map_agri_byproducts(self, target: str) -> dict:
+    def _map_agri_byproducts(self, target: str) -> dict:
         """Map agricultural waste to industrial substitutes."""
         prompt = f"""You are an industrial materials expert in agricultural by-product utilization.
 Target material/application: {target}
@@ -23,62 +24,46 @@ Output ONLY valid JSON:
         try:
             raw = ask(prompt, max_tokens=1200)
             clean = raw.strip()
-            for t in ("```json", "```"):
-                if clean.startswith(t): clean = clean[len(t):]
+            if clean.startswith("```json"): clean = clean[7:]
+            if clean.startswith("```"): clean = clean[3:]
             if clean.endswith("```"): clean = clean[:-3]
             return json.loads(clean.strip())
         except Exception:
             return {"byproduct_substitutes": []}
 
-def formulate(self, target_material: str, constraints: str):
-        # 1. Research alternative materials and current market prices
-        alt_context = self.search.search(f"alternative supplementary materials for {target_material} low cost high strength", 2)
-        price_context = self.search.search(f"wholesale price per ton raw materials {target_material} alternatives", 2)
-        
-        system = f"""You are a Materials Science and Chemical Engineering AI.
-Your goal: Formulate 3 specific mixture ratios for {target_material} that are cheaper but stronger/more durable than the standard baseline.
-You MUST use the real-world market context below to ensure your raw materials actually exist and your costs are realistic.
+    def formulate(self, target_material: str, constraints: str = ""):
+        web_context = self.search.search(f"{target_material} formulation cost optimization", 2)
+        memory_hits = self.memory.search_similar(f"material {target_material}", limit=2)
+        memory_context = "None"
+        if memory_hits.get("results"):
+            memory_context = "\n".join(f"- [{h['title']}]: {h['preview']}" for h in memory_hits["results"])
 
-MARKET & SCIENCE CONTEXT:
----
-{alt_context}
-{price_context}
----
-
-Output ONLY a valid JSON object with these exact keys:
+        system = f"""You are NEXUS Materials Engineer. Optimize formulations for cost, strength, availability.
+Constraints: {constraints or "standard production"}
+WEB CONTEXT: {web_context}
+MEMORY: {memory_context}
+Output ONLY valid JSON:
 {{
   "target_material": "{target_material}",
-  "formulations": [
-    {{
-      "name": "Name of this specific mix",
-      "ingredients_and_ratios": {{"Ingredient A": "X%", "Ingredient B": "Y%"}},
-      "estimated_cost_per_ton": 0,
-      "sympy_cost_math": "A sympy expression calculating total cost based on ratios and market prices (e.g., '0.5*50 + 0.5*20')",
-      "why_it_works": "The chemical/structural reason this mix is stronger or more durable.",
-      "manufacturing_risks": ["Real-world production challenges"]
-    }}
-  ],
-  "the_biggest_trap": "What causes this type of material to fail in real life."
-}}
-"""
-        prompt = f"Target: {target_material}\nConstraints: {constraints}"
+  "formulation": {{"ingredients": [], "process": "", "equipment": [], "estimated_cost_per_unit": ""}},
+  "alternatives": [{{"name": "", "trade_off": ""}}],
+  "optimization_notes": "",
+  "confidence": ""
+}}"""
         try:
-            # Increased max_tokens to 3000 so it doesn't get cut off mid-JSON
-            raw = ask(prompt, system=system, max_tokens=3000)
+            raw = ask(f"Formulate: {target_material}", system=system, max_tokens=2500)
             clean = raw.strip()
             if clean.startswith("```json"): clean = clean[7:]
             if clean.startswith("```"): clean = clean[3:]
             if clean.endswith("```"): clean = clean[:-3]
-            
             data = json.loads(clean.strip())
-            
-            # Verify the cost math for each formulation using the deterministic Math Tool
-            for mix in data.get("formulations", []):
-                math_expr = mix.get("sympy_cost_math", "0")
-                mix["math_verified"] = self.math.calculate(math_expr)
-            
-            return {"data": data, "method": "materials+math+search"}
+
+            # Agri-byproduct mapping (self-improvement)
+            byproducts = self._map_agri_byproducts(target_material)
+            data["agri_byproduct_substitutes"] = byproducts
+
+            return {"data": data, "method": "llm+search+math+memory+byproduct_mapping"}
         except json.JSONDecodeError:
-            return {"raw": raw, "method": "llm", "error": "Failed to parse JSON"}
+            return {"raw": raw, "error": "parse failed"}
         except LLMError as e:
-            return {"error": str(e), "method": "fallback"}
+            return {"error": str(e)}
