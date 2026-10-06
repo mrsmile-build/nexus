@@ -25,6 +25,8 @@ from engines.memory_semantic.src.semantic_memory import SemanticMemory
 from engines.truth.src.truth_engine import TruthEngine
 from engines.blend.src.blend_engine import BlendEngine
 from engines.code.src.code_engine import CodeEngine
+from engines.skills.src.skills_engine import SkillsEngine
+from engines.growth.src.growth_engine import GrowthEngine
 from core.llm_client import ask
 
 app = FastAPI(title="NEXUS Cognitive Core API", version="2.0")
@@ -66,6 +68,8 @@ sem_memory = SemanticMemory()
 truth_engine = TruthEngine()
 blend_engine = BlendEngine()
 code_engine = CodeEngine()
+skills_engine = SkillsEngine()
+growth_engine = GrowthEngine()
 
 NEXUS_API_KEY = os.environ.get("NEXUS_API_KEY", "")
 key_header = APIKeyHeader(name="X-NEXUS-Key", auto_error=False)
@@ -123,6 +127,22 @@ class VisionRequest(BaseModel):
     image_url: str
     question: str
 
+class SEORequest(BaseModel):
+    topic: str
+    target_keyword: str = ""
+
+class ForumRequest(BaseModel):
+    question: str
+    forum: str = "generic"
+
+class NewsletterRequest(BaseModel):
+    days_back: int = 7
+
+class TeachRequest(BaseModel):
+    skill: str
+    level: str = "beginner"
+    context: str = ""
+
 class ReviewRequest(BaseModel):
     code: str
     context: str = ""
@@ -144,6 +164,27 @@ class SearchRequest(BaseModel):
     limit: int = 3
 
 # ---------- Original Engine Endpoints (kept for Uncle projects) ----------
+@app.post("/scheduled/run", dependencies=[Depends(require_key)])
+def scheduled_run():
+    # Daily autonomous work
+    import random
+    topics = [
+        ("How to start a palm oil refining business in Nigeria", "palm oil business Nigeria"),
+        ("10 proven farm-to-table business ideas in Lagos 2026", "farm business Lagos"),
+        ("Why soap making is the most recession-proof small business", "soap making business"),
+        ("How to export Nigerian agricultural products to Europe", "export agriculture Nigeria"),
+        ("Cheapest cement formula for small-scale builders", "cement formula cheap"),
+    ]
+    topic, kw = random.choice(topics)
+    article = growth_engine.seo_article(topic, kw)
+    forum_q = random.choice([
+        "What's the best small business to start in Nigeria with 100k naira?",
+        "How do I start exporting from Nigeria?",
+        "Is AI useful for small businesses in Africa?",
+    ])
+    answer = growth_engine.forum_answer(forum_q, forum="nairaland")
+    return {"article": article, "forum_answer": answer, "method": "scheduled_run"}
+
 @app.get("/")
 def read_root():
     return {"status": "NEXUS Cognitive Core is online and ready.", "version": "2.0"}
@@ -180,6 +221,22 @@ def grow(request: AgRequest):
 def see(request: VisionRequest):
     return vision_tool.see(request.image_url, request.question)
 
+@app.post("/growth/seo", dependencies=[Depends(require_key)])
+def growth_seo(request: SEORequest):
+    return growth_engine.seo_article(request.topic, request.target_keyword)
+
+@app.post("/growth/forum", dependencies=[Depends(require_key)])
+def growth_forum(request: ForumRequest):
+    return growth_engine.forum_answer(request.question, request.forum)
+
+@app.post("/growth/newsletter", dependencies=[Depends(require_key)])
+def growth_newsletter(request: NewsletterRequest):
+    return growth_engine.newsletter_digest(request.days_back)
+
+@app.post("/skills/teach", dependencies=[Depends(require_key)])
+def skills_teach(request: TeachRequest):
+    return skills_engine.teach(request.skill, request.level, request.context)
+
 @app.post("/code/review", dependencies=[Depends(require_key)])
 def code_review(request: ReviewRequest):
     return code_engine.review(request.code, request.context)
@@ -208,13 +265,13 @@ def chat(request: ChatRequest):
         return {"response": vision_result.get("analysis", "I couldn't see the image."), "engine": "vision"}
 
     router_prompt = """You are a routing AI. Choose the single best engine.
-MATH=calculations. BUSINESS=money/startups/pricing/profit/selling/broke. NATURE=plants/herbs/medicine/charms. MATERIALS=cement/alloys/chemicals/manufacturing/formulations. DECOMPOSE=teardowns/how-made/supply-chain. GROW=farming/soil/crops. BLEND=substitutes/ratios/combining/‘I don't have X’/recreating something from parts (moringa, limestone, water). CODE=programming/debug/review/fix/scaffold/build software. THINK=everything else.
+MATH=calculations. BUSINESS=money/startups/pricing/profit/selling/broke. NATURE=plants/herbs/medicine/charms. MATERIALS=cement/alloys/chemicals/manufacturing/formulations. DECOMPOSE=teardowns/how-made/supply-chain. GROW=farming/soil/crops. BLEND=substitutes/ratios/combining/‘I don't have X’/recreating something from parts (moringa, limestone, water). CODE=programming/debug/review/fix/scaffold/build software. SKILLS=teach/learn/explain/master any skill, craft, trade, art or how-to (old or modern, physical or online). THINK=everything else.
 Reply with ONLY the engine word.
 User Message: """ + request.message
     try:
         raw_route = ask(router_prompt, max_tokens=12).strip().upper()
         route = "THINK"
-        for cand in ["MATERIALS", "DECOMPOSE", "BUSINESS", "NATURE", "MATH", "GROW", "BLEND", "CODE", "THINK"]:
+        for cand in ["MATERIALS", "DECOMPOSE", "BUSINESS", "NATURE", "MATH", "GROW", "BLEND", "CODE", "SKILLS", "THINK"]:
             if cand in raw_route:
                 route = cand
                 break
@@ -231,6 +288,7 @@ User Message: """ + request.message
     elif route == "GROW": result = ag_engine.optimize("Grow successfully", request.message)
     elif route == "BLEND": result = blend_engine.blend(request.message)
     elif route == "CODE": result = {"note": "Use /code/review, /code/fix or /code/scaffold for full power", "quick": engine.think(request.message)}
+    elif route == "SKILLS": result = skills_engine.teach(request.message)
     else: result = engine.think(request.message)
 
     try:

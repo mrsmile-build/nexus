@@ -89,20 +89,52 @@ Output ONLY valid JSON:
             return {"error": str(e)}
 
     # ---------- SCAFFOLD (professional skeleton) ----------
+    def _salvage(self, t):
+        try:
+            return json.loads(t), False
+        except Exception:
+            pass
+        for end in range(len(t) - 1, 0, -1):
+            if t[end] in '}]':
+                frag = t[:end + 1]
+                stack = []; in_str = False; esc = False
+                for ch in frag:
+                    if in_str:
+                        if esc: esc = False
+                        elif ch == '\\': esc = True
+                        elif ch == '"': in_str = False
+                        continue
+                    if ch == '"': in_str = True
+                    elif ch in '{[': stack.append(ch)
+                    elif ch in '}]':
+                        if stack: stack.pop()
+                if in_str:
+                    continue
+                closers = ''.join('}' if c == '{' else ']' for c in reversed(stack))
+                try:
+                    return json.loads(frag + closers), True
+                except Exception:
+                    continue
+        return None, False
+
     def scaffold(self, spec: str):
         system = """You are a startup CTO generating a MODERN PROFESSIONAL project skeleton.
 Every skeleton MUST include: auth/API-key gate, rate limiting, error handling, tests, CI workflow, README, .env.example, health endpoint, versioning, observability hooks, and a clean REST/JSON contract (hardware-agnostic, portable to any future CPU).
+HARD LIMITS: exactly 6 files; each file content MAX 45 lines; keep JSON compact so the response finishes.
 Output ONLY valid JSON:
-{"stack": "", "tree": "ascii file tree", "files": [{"path": "", "content": ""}], "professional_checklist": [], "why_modern": ""}
-Include real working content for the 6-10 most important files."""
+{"stack": "", "tree": "ascii file tree", "files": [{"path": "", "content": ""}], "professional_checklist": [], "why_modern": ""}"""
         try:
-            raw = ask(spec, system=system, max_tokens=4000)
+            raw = ask(spec, system=system, max_tokens=7500)
             clean = raw.strip()
             if clean.startswith("```json"): clean = clean[7:]
             if clean.startswith("```"): clean = clean[3:]
             if clean.endswith("```"): clean = clean[:-3]
-            return {"data": json.loads(clean.strip()), "method": "scaffold"}
-        except json.JSONDecodeError:
-            return {"raw": raw, "error": "parse failed"}
+            data, salvaged = self._salvage(clean.strip())
+            if data is None:
+                return {"raw": raw[:4000], "error": "parse failed"}
+            out = {"data": data, "method": "scaffold" + ("+salvage" if salvaged else "")}
+            if salvaged:
+                out["note"] = "Output was cut by token limit; recovered the complete portion. Ask again for the remaining files."
+            return out
         except LLMError as e:
             return {"error": str(e)}
