@@ -24,6 +24,7 @@ from engines.tools.src.search_tool import SearchTool
 from engines.memory_semantic.src.semantic_memory import SemanticMemory
 from engines.truth.src.truth_engine import TruthEngine
 from engines.blend.src.blend_engine import BlendEngine
+from engines.code.src.code_engine import CodeEngine
 from core.llm_client import ask
 
 app = FastAPI(title="NEXUS Cognitive Core API", version="2.0")
@@ -64,6 +65,7 @@ search_tool = SearchTool()
 sem_memory = SemanticMemory()
 truth_engine = TruthEngine()
 blend_engine = BlendEngine()
+code_engine = CodeEngine()
 
 NEXUS_API_KEY = os.environ.get("NEXUS_API_KEY", "")
 key_header = APIKeyHeader(name="X-NEXUS-Key", auto_error=False)
@@ -121,6 +123,17 @@ class VisionRequest(BaseModel):
     image_url: str
     question: str
 
+class ReviewRequest(BaseModel):
+    code: str
+    context: str = ""
+
+class FixRequest(BaseModel):
+    code: str
+    error: str = ""
+
+class ScaffoldRequest(BaseModel):
+    spec: str
+
 class StoreRequest(BaseModel):
     title: str
     content: str
@@ -167,6 +180,18 @@ def grow(request: AgRequest):
 def see(request: VisionRequest):
     return vision_tool.see(request.image_url, request.question)
 
+@app.post("/code/review", dependencies=[Depends(require_key)])
+def code_review(request: ReviewRequest):
+    return code_engine.review(request.code, request.context)
+
+@app.post("/code/fix", dependencies=[Depends(require_key)])
+def code_fix(request: FixRequest):
+    return code_engine.fix(request.code, request.error)
+
+@app.post("/code/scaffold", dependencies=[Depends(require_key)])
+def code_scaffold(request: ScaffoldRequest):
+    return code_engine.scaffold(request.spec)
+
 @app.post("/memory/store", dependencies=[Depends(require_key)])
 def store_memory(request: StoreRequest):
     return sem_memory.store_discovery(request.title, request.content, request.metadata)
@@ -183,13 +208,13 @@ def chat(request: ChatRequest):
         return {"response": vision_result.get("analysis", "I couldn't see the image."), "engine": "vision"}
 
     router_prompt = """You are a routing AI. Choose the single best engine.
-MATH=calculations. BUSINESS=money/startups/pricing/profit/selling/broke. NATURE=plants/herbs/medicine/charms. MATERIALS=cement/alloys/chemicals/manufacturing/formulations. DECOMPOSE=teardowns/how-made/supply-chain. GROW=farming/soil/crops. BLEND=substitutes/ratios/combining/‘I don't have X’/recreating something from parts (moringa, limestone, water). THINK=everything else.
+MATH=calculations. BUSINESS=money/startups/pricing/profit/selling/broke. NATURE=plants/herbs/medicine/charms. MATERIALS=cement/alloys/chemicals/manufacturing/formulations. DECOMPOSE=teardowns/how-made/supply-chain. GROW=farming/soil/crops. BLEND=substitutes/ratios/combining/‘I don't have X’/recreating something from parts (moringa, limestone, water). CODE=programming/debug/review/fix/scaffold/build software. THINK=everything else.
 Reply with ONLY the engine word.
 User Message: """ + request.message
     try:
         raw_route = ask(router_prompt, max_tokens=12).strip().upper()
         route = "THINK"
-        for cand in ["MATERIALS", "DECOMPOSE", "BUSINESS", "NATURE", "MATH", "GROW", "BLEND", "THINK"]:
+        for cand in ["MATERIALS", "DECOMPOSE", "BUSINESS", "NATURE", "MATH", "GROW", "BLEND", "CODE", "THINK"]:
             if cand in raw_route:
                 route = cand
                 break
@@ -205,6 +230,7 @@ User Message: """ + request.message
     elif route == "DECOMPOSE": result = decomposer.teardown(request.message)
     elif route == "GROW": result = ag_engine.optimize("Grow successfully", request.message)
     elif route == "BLEND": result = blend_engine.blend(request.message)
+    elif route == "CODE": result = {"note": "Use /code/review, /code/fix or /code/scaffold for full power", "quick": engine.think(request.message)}
     else: result = engine.think(request.message)
 
     try:
